@@ -1,8 +1,8 @@
 # SlySearch Frontend
 
-**⚠️ WARNING: This project is currently under active development and is incomplete. Features may be broken or missing. Pull and use at your own risk. ⚠️**
+**✨ Note: This frontend is under active development. While the backend is functional, frontend features are being implemented incrementally. Some UI elements might not be fully connected yet. ✨**
 
-This repository contains the frontend application for SlySearch, a customizable search engine interface.
+This repository contains the frontend application for SlySearch, a customizable search engine interface designed to work with its corresponding backend service.
 
 ## Technology Stack
 
@@ -15,37 +15,39 @@ This repository contains the frontend application for SlySearch, a customizable 
 *   **Schema Validation:** [Zod](https://zod.dev/)
 *   **Package Manager:** [pnpm](https://pnpm.io/)
 
-## Current State
+## Current Frontend State
 
-*   **Homepage:** Basic search interface with input, logo, and selectors.
-*   **Search Results Page:** Displays search results fetched from the backend API. Supports different layouts (list, grid, compact).
-*   **Settings Page:** UI for configuring various application settings, categorized into sections:
-    *   General (Instance Name, Results per Page, Safe Search, etc.)
-    *   Engines (Engine list management - UI only)
-    *   Privacy (Proxy settings, Tracker removal, etc. - UI only)
-    *   Appearance (Theme, Layout, Alignment, etc.)
-    *   Advanced (Backend URL, Timeouts, Debug Mode, etc.)
-    *   Personal Sources (Management for different source types like Web, Obsidian, Local Files, AI - UI only)
-*   **API Routes:** Basic Next.js API routes exist for `/api/search`, `/api/settings`, `/api/health`. (Backend logic likely needs implementation).
-*   **Theme:** Supports dark/light themes via `next-themes`.
-*   **Basic Settings Persistence:** Settings are saved to local storage.
+*   **Core Search:** Homepage and Search Results page are functional, interacting with the backend search API.
+*   **Result Layouts:** List, Grid, and Compact result layouts are implemented.
+*   **Settings UI:** Most settings panels are present in the UI:
+    *   General, Appearance, Advanced settings are mostly connected.
+    *   Engine management, Privacy controls, and Personal Sources UI exist but might require further frontend implementation to fully utilize backend capabilities.
+*   **API Interaction:** Frontend makes calls to backend endpoints for search (`/api/search`), settings (`/api/settings`), and health checks (`/api/health`).
+*   **Theming:** Dark/light theme support is integrated.
+*   **Settings Persistence:** Frontend settings are saved locally via local storage.
 
-## To-Do / Future Implementation
+## Frontend To-Do / Future Implementation
 
-*   **Backend Integration:** Connect API routes (`/api/search`, `/api/settings`) to a functional backend service. The current API routes are likely placeholders.
-*   **Engine & Loadout Logic:** Implement the backend logic for managing search engines and engine loadouts.
-*   **Personal Sources Implementation:** Implement the fetching and searching logic for configured personal sources (Obsidian, Local Files, AI, YouTube, SoundCloud, etc.).
-*   **Feature Completeness:** Fully implement features mentioned in the settings UI (e.g., RAG, Result Proxy, Rate Limiting, etc.).
-*   **Authentication/Authorization:** No user authentication is currently implemented.
-*   **Error Handling & Loading States:** Improve user feedback during loading and error scenarios.
-*   **Testing:** Add comprehensive unit, integration, and end-to-end tests.
-*   **Documentation:** Expand documentation for components, setup, and configuration.
-*   **Deployment:** Define and document deployment processes.
-*   **UI/UX Refinements:** Continuously improve the user interface and experience.
+*   **Engine & Loadout Management:** Fully integrate the frontend UI for creating, editing, deleting, and selecting engine loadouts with the backend API.
+*   **Personal Sources Integration:** Connect the UI for managing personal sources (Obsidian, Local Files, AI, YouTube, SoundCloud, etc.) to the respective backend functionalities.
+*   **Custom Knowledge Base Integration:** UI and logic for connecting and managing custom knowledge bases.
+*   **Custom URL "Packs":** Functionality to define, import, and search within curated lists or "packs" of URLs.
+*   **RAG-Infused Search:** Implement fully customizable searches enhanced by Retrieval-Augmented Generation. This includes:
+    *   Searching across local files and connected knowledge bases.
+    *   Leveraging embeddings from personal sources for truly personalized results.
+*   **"Wave Racer" Search Mode:** Develop a novel search experience using LLMs to synthesize information from web results, personal sources, and knowledge bases into a gamified, exploratory "long-approach" to web surfing.
+*   **Feature Integration:** Wire up remaining settings UI components to their corresponding backend features (e.g., RAG toggles, Result Proxy configuration, Rate Limiting display/controls if applicable).
+*   **Authentication/Authorization UI:** Implement frontend login/logout flows if backend authentication is available.
+*   **Error Handling & Loading States:** Enhance user feedback during API calls and background processes.
+*   **Frontend Testing:** Increase frontend test coverage (unit, integration, e2e).
+*   **UI/UX Refinements:** Continuously improve the user interface and experience based on available backend features.
 
 ## Getting Started (Development)
 
+**Prerequisite:** Ensure the SlySearch backend service is running and accessible.
+
 1.  Clone the repository.
 2.  Install dependencies: `pnpm install`
-3.  Run the development server: `pnpm dev`
-4.  Open [http://localhost:3000](http://localhost:3000) in your browser. 
+3.  *(Optional)* Create a `.env.local` file if you need to override the default backend URL (defined in settings).
+4.  Run the development server: `pnpm dev`
+5.  Open [http://localhost:3000](http://localhost:3000) in your browser. 
