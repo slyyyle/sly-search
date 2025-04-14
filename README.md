@@ -1,8 +1,10 @@
-# SlySearch Frontend
+# SlySearch
 
 **✨ Note: This frontend is under active development. While the backend is functional, frontend features are being implemented incrementally. Some UI elements might not be fully connected yet. ✨**
 
 This repository contains the frontend application for SlySearch, a customizable search engine interface designed to work with its corresponding backend service.
+
+![image](https://github.com/user-attachments/assets/be5e05b2-d338-44bf-bb06-7f767e8a4002)
 
 ## Technology Stack
 
