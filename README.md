@@ -1,6 +1,6 @@
 # SlySearch
 
-**✨ Note: This frontend is under active development. While the backend is functional, frontend features are being implemented incrementally. Some UI elements might not be fully connected yet.  Also, because it is built on searXNG, it complicates handling of the docker image - which I hope to rework towards completion. ✨**
+**✨ Note: This frontend is under active development. While the backend is functional, it is not yet uploaded into a repo, and frontend features are being implemented incrementally. Some UI elements might not be fully connected yet.  Also, because it is built on searXNG, it complicates handling of the docker image - which I hope to rework towards completion. ✨**
 
 This repository contains the frontend application for SlySearch, a customizable search engine interface designed to work with its corresponding backend service.
 
