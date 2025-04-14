@@ -1,0 +1,174 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 263.4 70% 50.4%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+
+    --radius: 0.5rem;
+
+    /* Google colors */
+    --google-blue: 217 90% 51%; /* #176BEF */
+    --google-red: 5 100% 59%; /* #FF3E30 */
+    --google-yellow: 42 93% 56%; /* #F7B529 */
+    --google-green: 145 74% 35%; /* #179C52 */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-black text-foreground;
+  }
+}
+
+/* Google gradient classes */
+.google-gradient {
+  background: linear-gradient(
+    90deg,
+    rgb(23, 107, 239) /* Blue */,
+    rgb(255, 62, 48) /* Red */,
+    rgb(247, 181, 41) /* Yellow */,
+    rgb(23, 156, 82) /* Green */
+  );
+}
+
+.google-gradient-text {
+  background: linear-gradient(
+    90deg,
+    rgb(23, 107, 239) /* Blue */,
+    rgb(255, 62, 48) /* Red */,
+    rgb(247, 181, 41) /* Yellow */,
+    rgb(23, 156, 82) /* Green */
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+/* Special logo text with pure Google colors - NO GLOW */
+.logo-text {
+  background: linear-gradient(
+    90deg,
+    rgb(23, 107, 239) /* Blue */,
+    rgb(255, 62, 48) /* Red */,
+    rgb(247, 181, 41) /* Yellow */,
+    rgb(23, 156, 82) /* Green */
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+.google-gradient-border {
+  position: relative;
+}
+
+.google-gradient-border::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(
+    90deg,
+    rgb(23, 107, 239) /* Blue */,
+    rgb(255, 62, 48) /* Red */,
+    rgb(247, 181, 41) /* Yellow */,
+    rgb(23, 156, 82) /* Green */
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 1;
+}
+
+/* Legacy classes that now use the Google gradient */
+.cyberpunk-gradient {
+  @apply google-gradient-text;
+}
+
+.cyberpunk-border {
+  @apply google-gradient-border;
+}
+
+.search-results-container {
+  background: rgba(13, 13, 15, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glow-text {
+  /* No text-shadow */
+}
+
+/* Fix for RadioGroup circle */
+.radix-state-checked .lucide-circle {
+  fill: currentColor !important;
+  color: white !important;
+}
+
+/* Ensure "Press Enter to Search" text is vibrant - NO GLOW */
+.search-hint {
+  background: linear-gradient(
+    90deg,
+    rgb(23, 107, 239) /* Blue */,
+    rgb(255, 62, 48) /* Red */,
+    rgb(247, 181, 41) /* Yellow */,
+    rgb(23, 156, 82) /* Green */
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+/* Letter hop animation */
+@keyframes letter-hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-letter-hop {
+  animation: letter-hop 1s ease-in-out; /* Increased from 0.5s to 1s for slower animation */
+}
