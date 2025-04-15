@@ -105,8 +105,8 @@ export function EnginesSettings({ settings, updateSetting }: EnginesSettingsProp
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Search Engines</CardTitle>
-        <CardDescription>Enable or disable search engines and adjust their weights</CardDescription>
+        <CardTitle>The Quiver</CardTitle>
+        <CardDescription>Select your boards (engines) & fine-tune their performance</CardDescription>
       </CardHeader>
       <CardContent>
         {/* Add the LoadoutManager component */}
@@ -123,11 +123,11 @@ export function EnginesSettings({ settings, updateSetting }: EnginesSettingsProp
 
         <div className="mb-4">
           <div className="flex items-center">
-            <Label>Engine Weights</Label>
+            <Label>Board Tuning</Label>
             <SettingsTooltip content="Weight determines the influence of each engine in the results. Higher weights give more prominence to that engine's results." />
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            SearXNG supports 100+ engines. Adjust weights to prioritize certain engines.
+            Choose your favorite boards and adjust their weighting. More weight means that board's results surface more often.
           </p>
         </div>
 

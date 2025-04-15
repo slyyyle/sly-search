@@ -23,13 +23,13 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>General Settings</CardTitle>
-          <CardDescription>Configure basic search behavior and preferences</CardDescription>
+          <CardTitle>The Lineup</CardTitle>
+          <CardDescription>Check the conditions & set your basic surf preferences</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <div className="flex items-center">
-              <Label htmlFor="instance-name">Instance Name</Label>
+              <Label htmlFor="instance-name">Spot Name</Label>
               <SettingsTooltip content="The name displayed in the header of your SearXNG instance. Default is 'SearXNG'." />
             </div>
             <Input
@@ -41,7 +41,7 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
 
           <div className="space-y-2">
             <div className="flex items-center">
-              <Label htmlFor="default-lang">Default Language</Label>
+              <Label htmlFor="default-lang">Local Tongue</Label>
               <SettingsTooltip content="Default search language. Set to 'auto' to detect from browser information or use specific language codes." />
             </div>
             <Select
@@ -68,7 +68,7 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
               <SettingsTooltip content="Filter results: 0: None, 1: Moderate, 2: Strict" />
             </div>
             <Select
-              value={currentSettings.safeSearch || "0"}
+              value={String(currentSettings.safeSearch ?? "0")}
               onValueChange={(value) => updateSetting("general", "safeSearch", value)}
             >
               <SelectTrigger id="safe-search">
@@ -88,7 +88,7 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
                 <Label htmlFor="autocomplete">Autocomplete</Label>
                 <SettingsTooltip content="Enable search suggestions as you type. Available backends include: 360search, baidu, brave, dbpedia, duckduckgo, google, yandex, and more." />
               </div>
-              <div className="text-sm text-muted-foreground">Enable search suggestions as you type</div>
+              <div className="text-sm text-muted-foreground">Get wave tips while paddling out</div>
             </div>
             <Switch
               id="autocomplete"
@@ -97,7 +97,6 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
             />
           </div>
 
-          {/* Engines Selection */}
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center">
@@ -114,7 +113,6 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
             </Button>
           </div>
 
-          {/* Surf Toggle */}
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center">
@@ -131,14 +129,13 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
             </Button>
           </div>
 
-          {/* RAG Toggle */}
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center">
-                <Label htmlFor="rag-enabled">RAG</Label>
+                <Label htmlFor="rag-enabled">AI Spotter</Label>
                 <SettingsTooltip content="Enable Retrieval-Augmented Generation for enhanced search results." />
               </div>
-              <div className="text-sm text-muted-foreground">Use AI to enhance search results</div>
+              <div className="text-sm text-muted-foreground">Use AI to scope the conditions</div>
             </div>
             <Switch
               id="rag-enabled"
@@ -186,7 +183,7 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
 
           <div className="space-y-2">
             <div className="flex items-center">
-              <Label htmlFor="ban-time">Ban Time on Fail (seconds)</Label>
+              <Label htmlFor="ban-time">Wipeout Cooldown (sec)</Label>
               <SettingsTooltip content="Ban time in seconds after engine errors. Engines that fail will be temporarily disabled." />
             </div>
             <Input
@@ -201,7 +198,7 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
 
           <div className="space-y-2">
             <div className="flex items-center">
-              <Label htmlFor="max-ban-time">Max Ban Time (seconds)</Label>
+              <Label htmlFor="max-ban-time">Max Wipeout Cooldown (sec)</Label>
               <SettingsTooltip content="Maximum ban time in seconds after engine errors." />
             </div>
             <Input
@@ -218,17 +215,17 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
 
       <Card>
         <CardHeader>
-          <CardTitle>Results Settings</CardTitle>
-          <CardDescription>Configure how search results are displayed</CardDescription>
+          <CardTitle>Ride Style</CardTitle>
+          <CardDescription>How you want your search results to flow</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center">
-                <Label htmlFor="open-new-tab">Open Results in New Tab</Label>
+                <Label htmlFor="open-new-tab">Open Links in New Window</Label>
                 <SettingsTooltip content="When enabled, search result links will open in a new browser tab." />
               </div>
-              <div className="text-sm text-muted-foreground">Open search results in a new browser tab</div>
+              <div className="text-sm text-muted-foreground">Pop open links in a fresh window</div>
             </div>
             <Switch
               id="open-new-tab"
@@ -240,10 +237,10 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center">
-                <Label htmlFor="infinite-scroll">Infinite Scroll</Label>
+                <Label htmlFor="infinite-scroll">Endless Summer Scroll</Label>
                 <SettingsTooltip content="When enabled, automatically loads the next page when scrolling to bottom of the current page." />
               </div>
-              <div className="text-sm text-muted-foreground">Load more results automatically when scrolling</div>
+              <div className="text-sm text-muted-foreground">Keep the results rolling in</div>
             </div>
             <Switch
               id="infinite-scroll"
@@ -252,35 +249,13 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
             />
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="results-per-page">Results Per Page</Label>
-              <SettingsTooltip content="Number of search results to display per page." />
-            </div>
-            <Select
-              value={currentSettings.resultsPerPage || "10"}
-              onValueChange={(value) => updateSetting("general", "resultsPerPage", value)}
-            >
-              <SelectTrigger id="results-per-page">
-                <SelectValue placeholder="Select number of results" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="30">30</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center">
-                <Label htmlFor="search-on-category">Search on Category Select</Label>
-                <SettingsTooltip content="Perform search immediately if a category is selected. Disable to select multiple categories at once." />
+                <Label htmlFor="search-on-category">Search When Switching Breaks</Label>
+                <SettingsTooltip content="When enabled, automatically runs a new search when you switch categories (e.g., Images, Videos)." />
               </div>
-              <div className="text-sm text-muted-foreground">Perform search immediately when selecting a category</div>
+              <div className="text-sm text-muted-foreground">Auto-search when you switch breaks (Images, Videos...)</div>
             </div>
             <Switch
               id="search-on-category"

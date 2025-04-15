@@ -18,17 +18,31 @@ interface AdvancedSettingsProps {
 export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsProps) {
   const currentSettings = settings || {}
 
+  // Helper function to safely update formats array
+  const updateFormats = (format: string, checked: boolean | string) => {
+    const currentFormats = currentSettings.formats || ["json", "html"]
+    let newFormats = [...currentFormats]
+    if (checked) {
+      if (!newFormats.includes(format)) {
+        newFormats.push(format)
+      }
+    } else {
+      newFormats = newFormats.filter(f => f !== format)
+    }
+    updateSetting("advanced", "formats", newFormats)
+  }
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Instance Configuration</CardTitle>
-          <CardDescription>Configure your SearXNG instance connection</CardDescription>
+          <CardTitle>Base Setup</CardTitle>
+          <CardDescription>Your core connection & timing settings</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <div className="flex items-center">
-              <Label htmlFor="instance-url">SearXNG Instance URL</Label>
+              <Label htmlFor="instance-url">Backend URL</Label>
               <SettingsTooltip content="The base URL of your SearXNG instance. For local instances, typically http://localhost:8888." />
             </div>
             <Input
@@ -40,7 +54,7 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
 
           <div className="space-y-2">
             <div className="flex items-center">
-              <Label htmlFor="request-timeout">Request Timeout (seconds)</Label>
+              <Label htmlFor="request-timeout">Paddle Out Timeout (sec)</Label>
               <SettingsTooltip content="Default timeout in seconds for requests to search engines. Can be overridden by individual engines." />
             </div>
             <Input
@@ -55,7 +69,7 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
 
           <div className="space-y-2">
             <div className="flex items-center">
-              <Label htmlFor="max-request-timeout">Maximum Request Timeout (seconds)</Label>
+              <Label htmlFor="max-request-timeout">Max Paddle Out Timeout (sec)</Label>
               <SettingsTooltip content="The maximum timeout in seconds for any search engine request." />
             </div>
             <Input
@@ -72,8 +86,8 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
 
       <Card>
         <CardHeader>
-          <CardTitle>API Configuration</CardTitle>
-          <CardDescription>Configure API-specific settings for headless operation</CardDescription>
+          <CardTitle>API Settings</CardTitle>
+          <CardDescription>Configure API formats & headless mode</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -86,16 +100,7 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
                 <Checkbox
                   id="format-json"
                   checked={currentSettings.formats?.includes("json") !== false}
-                  onCheckedChange={(checked) => {
-                    const formats = [...(currentSettings.formats || ["json", "html"])]
-                    if (checked) {
-                      if (!formats.includes("json")) formats.push("json")
-                    } else {
-                      const index = formats.indexOf("json")
-                      if (index > -1) formats.splice(index, 1)
-                    }
-                    updateSetting("advanced", "formats", formats)
-                  }}
+                  onCheckedChange={(checked) => updateFormats("json", checked)}
                 />
                 <Label htmlFor="format-json">JSON (API)</Label>
               </div>
@@ -103,16 +108,7 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
                 <Checkbox
                   id="format-html"
                   checked={currentSettings.formats?.includes("html") !== false}
-                  onCheckedChange={(checked) => {
-                    const formats = [...(currentSettings.formats || ["json", "html"])]
-                    if (checked) {
-                      if (!formats.includes("html")) formats.push("html")
-                    } else {
-                      const index = formats.indexOf("html")
-                      if (index > -1) formats.splice(index, 1)
-                    }
-                    updateSetting("advanced", "formats", formats)
-                  }}
+                  onCheckedChange={(checked) => updateFormats("html", checked)}
                 />
                 <Label htmlFor="format-html">HTML</Label>
               </div>
@@ -120,16 +116,7 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
                 <Checkbox
                   id="format-csv"
                   checked={currentSettings.formats?.includes("csv") === true}
-                  onCheckedChange={(checked) => {
-                    const formats = [...(currentSettings.formats || ["json", "html"])]
-                    if (checked) {
-                      if (!formats.includes("csv")) formats.push("csv")
-                    } else {
-                      const index = formats.indexOf("csv")
-                      if (index > -1) formats.splice(index, 1)
-                    }
-                    updateSetting("advanced", "formats", formats)
-                  }}
+                  onCheckedChange={(checked) => updateFormats("csv", checked)}
                 />
                 <Label htmlFor="format-csv">CSV</Label>
               </div>
@@ -137,16 +124,7 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
                 <Checkbox
                   id="format-rss"
                   checked={currentSettings.formats?.includes("rss") === true}
-                  onCheckedChange={(checked) => {
-                    const formats = [...(currentSettings.formats || ["json", "html"])]
-                    if (checked) {
-                      if (!formats.includes("rss")) formats.push("rss")
-                    } else {
-                      const index = formats.indexOf("rss")
-                      if (index > -1) formats.splice(index, 1)
-                    }
-                    updateSetting("advanced", "formats", formats)
-                  }}
+                  onCheckedChange={(checked) => updateFormats("rss", checked)}
                 />
                 <Label htmlFor="format-rss">RSS</Label>
               </div>
@@ -159,7 +137,7 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
                 <Label htmlFor="headless-mode">Headless Mode</Label>
                 <SettingsTooltip content="Enable headless mode for API-only operation. Disables the web UI." />
               </div>
-              <div className="text-sm text-muted-foreground">Optimize for API-only usage</div>
+              <div className="text-sm text-muted-foreground">Optimize for API-only usage (no UI)</div>
             </div>
             <Switch
               id="headless-mode"
@@ -172,8 +150,8 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
 
       <Card>
         <CardHeader>
-          <CardTitle>Result Proxy Configuration</CardTitle>
-          <CardDescription>Configure proxy settings for search results</CardDescription>
+          <CardTitle>Result Link Proxy</CardTitle>
+          <CardDescription>Route result links through the shack</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
@@ -182,11 +160,11 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
                 <Label htmlFor="enable-result-proxy">Enable Result Proxy</Label>
                 <SettingsTooltip content="Enable proxying of search results through SearXNG for enhanced privacy." />
               </div>
-              <div className="text-sm text-muted-foreground">Proxy search results through SearXNG</div>
+              <div className="text-sm text-muted-foreground">Proxy result links through your instance</div>
             </div>
             <Switch
               id="enable-result-proxy"
-              checked={settings.enableResultProxy === true}
+              checked={currentSettings.enableResultProxy === true}
               onCheckedChange={(checked) => updateSetting("advanced", "enableResultProxy", checked)}
             />
           </div>
@@ -199,9 +177,9 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
             <Input
               id="result-proxy-url"
               placeholder="http://localhost:8888/proxy"
-              value={settings.resultProxyUrl || ""}
+              value={currentSettings.resultProxyUrl || ""}
               onChange={(e) => updateSetting("advanced", "resultProxyUrl", e.target.value)}
-              disabled={!settings.enableResultProxy}
+              disabled={!currentSettings.enableResultProxy}
             />
           </div>
 
@@ -214,9 +192,9 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
               id="result-proxy-key"
               type="password"
               placeholder="Enter proxy key"
-              value={settings.resultProxyKey || ""}
+              value={currentSettings.resultProxyKey || ""}
               onChange={(e) => updateSetting("advanced", "resultProxyKey", e.target.value)}
-              disabled={!settings.enableResultProxy}
+              disabled={!currentSettings.enableResultProxy}
             />
           </div>
         </CardContent>
@@ -224,19 +202,19 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
 
       <Card>
         <CardHeader>
-          <CardTitle>Connection Settings</CardTitle>
-          <CardDescription>Configure connection pool and HTTP settings</CardDescription>
+          <CardTitle>Connection Tuning</CardTitle>
+          <CardDescription>Fine-tune connection pool & HTTP settings</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <div className="flex items-center">
-              <Label htmlFor="pool-connections">Pool Connections</Label>
+              <Label htmlFor="pool-connections">Max Concurrent Connections</Label>
               <SettingsTooltip content="The maximum number of concurrent connections that may be established." />
             </div>
             <Input
               id="pool-connections"
               type="number"
-              value={settings.poolConnections || "100"}
+              value={currentSettings.poolConnections || "100"}
               min="10"
               max="500"
               onChange={(e) => updateSetting("advanced", "poolConnections", e.target.value)}
@@ -245,13 +223,13 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
 
           <div className="space-y-2">
             <div className="flex items-center">
-              <Label htmlFor="pool-maxsize">Pool Max Size</Label>
+              <Label htmlFor="pool-maxsize">Keep-Alive Connection Limit</Label>
               <SettingsTooltip content="Allow the connection pool to maintain keep-alive connections below this point." />
             </div>
             <Input
               id="pool-maxsize"
               type="number"
-              value={settings.poolMaxsize || "20"}
+              value={currentSettings.poolMaxsize || "20"}
               min="5"
               max="100"
               onChange={(e) => updateSetting("advanced", "poolMaxsize", e.target.value)}
@@ -262,83 +240,50 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
             <div className="space-y-0.5">
               <div className="flex items-center">
                 <Label htmlFor="enable-http2">Enable HTTP/2</Label>
-                <SettingsTooltip content="Enable HTTP/2 support for outgoing connections to search engines." />
+                <SettingsTooltip content="Enable HTTP/2 support for potentially faster connections." />
               </div>
-              <div className="text-sm text-muted-foreground">Use HTTP/2 for outgoing connections</div>
+              <div className="text-sm text-muted-foreground">Enable HTTP/2 for faster connections</div>
             </div>
             <Switch
               id="enable-http2"
-              checked={settings.enableHttp2 !== false}
+              checked={currentSettings.enableHttp2 !== false}
               onCheckedChange={(checked) => updateSetting("advanced", "enableHttp2", checked)}
             />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="http-protocol">HTTP Protocol Version</Label>
-              <SettingsTooltip content="HTTP protocol version to use for outgoing requests. 1.0 and 1.1 are supported." />
-            </div>
-            <Select
-              value={settings.httpProtocol || "1.0"}
-              onValueChange={(value) => updateSetting("advanced", "httpProtocol", value)}
-            >
-              <SelectTrigger id="http-protocol">
-                <SelectValue placeholder="Select HTTP version" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1.0">HTTP 1.0</SelectItem>
-                <SelectItem value="1.1">HTTP 1.1</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Miscellaneous Settings</CardTitle>
-          <CardDescription>Additional advanced configuration options</CardDescription>
+          <CardTitle>Dev Tools & Custom Code</CardTitle>
+          <CardDescription>Debugging options and custom CSS</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="custom-css">Custom CSS</Label>
-              <SettingsTooltip content="Add custom CSS to modify the appearance of your SearXNG instance." />
-            </div>
-            <Textarea
-              id="custom-css"
-              placeholder="/* Add your custom CSS here */"
-              className="font-mono text-sm"
-              rows={5}
-              value={settings.customCss || ""}
-              onChange={(e) => updateSetting("advanced", "customCss", e.target.value)}
-            />
-          </div>
-
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center">
                 <Label htmlFor="debug-mode">Debug Mode</Label>
-                <SettingsTooltip content="Enable debug information. Useful for troubleshooting but should be disabled in production." />
+                <SettingsTooltip content="Enable debug mode for more verbose logging and potentially sensitive information display." />
               </div>
-              <div className="text-sm text-muted-foreground">Enable debug information</div>
+              <div className="text-sm text-muted-foreground">Enable debug mode for detailed logging</div>
             </div>
             <Switch
               id="debug-mode"
-              checked={settings.debugMode === true}
+              checked={currentSettings.debugMode === true}
               onCheckedChange={(checked) => updateSetting("advanced", "debugMode", checked)}
             />
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center">
+              <Label htmlFor="custom-css">Custom Board Spray</Label>
               <Label htmlFor="redis-url">Redis URL</Label>
               <SettingsTooltip content="URL to connect to Redis database. Used for caching and session management." />
             </div>
             <Input
               id="redis-url"
               placeholder="redis://username:password@localhost:6379/0"
-              value={settings.redisUrl || ""}
+              value={currentSettings.redisUrl || ""}
               onChange={(e) => updateSetting("advanced", "redisUrl", e.target.value)}
             />
           </div>
@@ -353,7 +298,7 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
             </div>
             <Switch
               id="limiter"
-              checked={settings.limiter === true}
+              checked={currentSettings.limiter === true}
               onCheckedChange={(checked) => updateSetting("advanced", "limiter", checked)}
             />
           </div>
@@ -368,7 +313,7 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
             </div>
             <Switch
               id="public-instance"
-              checked={settings.publicInstance === true}
+              checked={currentSettings.publicInstance === true}
               onCheckedChange={(checked) => updateSetting("advanced", "publicInstance", checked)}
             />
           </div>

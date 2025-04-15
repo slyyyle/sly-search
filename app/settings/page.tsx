@@ -248,51 +248,32 @@ export default function SettingsPage() {
           <div className="flex justify-center mb-6">
             <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab} className="w-auto">
               <TabsList className="bg-background/60 google-gradient-border inline-flex mx-auto">
-                <TabsTrigger value="general" className="px-5">
-                  General
-                </TabsTrigger>
-                <TabsTrigger value="engines" className="px-5">
-                  Search Engines
-                </TabsTrigger>
-                <TabsTrigger value="personal" className="px-5">
-                  The Surf
-                </TabsTrigger>
-                <TabsTrigger value="privacy" className="px-5">
-                  Privacy
-                </TabsTrigger>
-                <TabsTrigger value="appearance" className="px-5">
-                  Appearance
-                </TabsTrigger>
-                <TabsTrigger value="advanced" className="px-5">
-                  Advanced
-                </TabsTrigger>
+                <TabsTrigger value="general">Lineup</TabsTrigger>
+                <TabsTrigger value="engines">Quiver</TabsTrigger>
+                <TabsTrigger value="privacy">Low Pro</TabsTrigger>
+                <TabsTrigger value="appearance">Wax & Decals</TabsTrigger>
+                <TabsTrigger value="advanced">Fins & Leash</TabsTrigger>
+                <TabsTrigger value="personalSources">The Surf</TabsTrigger>
               </TabsList>
 
-              <div className="space-y-6 mt-6">
-                <TabsContent value="general" className="space-y-6">
-                  <GeneralSettings settings={settings.general} updateSetting={updateSetting} />
-                </TabsContent>
-
-                <TabsContent value="engines">
-                  <EnginesSettings settings={settings.engines} updateSetting={updateSetting} />
-                </TabsContent>
-
-                <TabsContent value="personal">
-                  <PersonalSourcesSettings settings={settings.personalSources || {}} updateSetting={updateSetting} />
-                </TabsContent>
-
-                <TabsContent value="privacy">
-                  <PrivacySettings settings={settings.privacy} updateSetting={updateSetting} />
-                </TabsContent>
-
-                <TabsContent value="appearance">
-                  <AppearanceSettings settings={settings.appearance} updateSetting={updateSetting} />
-                </TabsContent>
-
-                <TabsContent value="advanced">
-                  <AdvancedSettings settings={settings.advanced} updateSetting={updateSetting} />
-                </TabsContent>
-              </div>
+              <TabsContent value="general">
+                <GeneralSettings settings={settings.general} updateSetting={updateSetting} />
+              </TabsContent>
+              <TabsContent value="engines">
+                <EnginesSettings settings={settings.engines} updateSetting={updateSetting} />
+              </TabsContent>
+              <TabsContent value="privacy">
+                <PrivacySettings settings={settings.privacy} updateSetting={updateSetting} />
+              </TabsContent>
+              <TabsContent value="appearance">
+                <AppearanceSettings settings={settings.appearance} updateSetting={updateSetting} />
+              </TabsContent>
+              <TabsContent value="advanced">
+                <AdvancedSettings settings={settings.advanced} updateSetting={updateSetting} />
+              </TabsContent>
+              <TabsContent value="personalSources">
+                <PersonalSourcesSettings settings={settings.personalSources} updateSetting={updateSetting} />
+              </TabsContent>
             </Tabs>
           </div>
         </div>

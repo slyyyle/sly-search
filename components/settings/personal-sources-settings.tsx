@@ -142,24 +142,32 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
     setIsSourceDialogOpen(true)
   }
 
-  // Get the correctly typed settings object for the currently selected source
-  const getSelectedSourceSettings = (): Record<string, any> => { // Return type allows general access in UI for now
-    if (!selectedSource || !settings) return {};
+  // Define default configurations based on use-settings.tsx defaults
+  const defaultAISettings: AISourceConfig = { provider: "openai", model: "gpt-4o", temperature: "0.7", maxTokens: "1000", apiKey: undefined, baseUrl: undefined };
+  const defaultYouTubeSettings: YouTubeSourceConfig = { maxResults: "10", includeChannels: true, includePlaylists: true, apiKey: undefined };
+  const defaultSoundCloudSettings: SoundCloudSourceConfig = { maxResults: "10", includeUsers: true, includePlaylists: true, clientId: undefined };
+  const defaultObsidianSettings: ObsidianSourceConfig = { useLocalPlugin: false, path: undefined, vaultName: undefined, apiPort: undefined, pluginApiKey: undefined };
+  const defaultLocalFilesSettings: LocalFilesSourceConfig = { fileTypes: "md,txt,pdf", useIndexer: false, path: undefined };
+
+  // Get the correctly typed settings object for the currently selected source,
+  // merging current settings with defaults to ensure all keys exist.
+  const getSelectedSourceSettings = (): Record<string, any> => {
+    if (!selectedSource) return {};
+
+    const currentPersonalSettings = settings || {};
 
     switch (selectedSource) {
       case "obsidian":
-        return settings.obsidian || {};
-      case "localFiles": // Assuming the ID used in the UI is "local" but the setting key is "localFiles"
-        return settings.localFiles || {};
+        return { ...defaultObsidianSettings, ...(currentPersonalSettings.obsidian || {}) };
+      case "localFiles": // Note: ID used might be "local" in some places, ensure consistency or map if needed
+        return { ...defaultLocalFilesSettings, ...(currentPersonalSettings.localFiles || {}) };
       case "ai":
-        return settings.ai || {};
+        return { ...defaultAISettings, ...(currentPersonalSettings.ai || {}) };
       case "youtube":
-        return settings.youtube || {};
+        return { ...defaultYouTubeSettings, ...(currentPersonalSettings.youtube || {}) };
       case "soundcloud":
-        return settings.soundcloud || {};
-      // Add cases for other custom source types if they have specific configs
+        return { ...defaultSoundCloudSettings, ...(currentPersonalSettings.soundcloud || {}) };
       default:
-        // For "normal" web search or unknown custom sources, return empty object
         return {};
     }
   };
@@ -235,7 +243,7 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
       <Card>
         <CardHeader>
           <CardTitle>The Surf</CardTitle>
-          <CardDescription>Configure and customize your personal knowledge sources</CardDescription>
+          <CardDescription>Manage your knowledge spots & choose your surf loadout</CardDescription>
         </CardHeader>
         <CardContent>
           {/* Add the LoadoutManager component */}
@@ -387,274 +395,281 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
 
           <div className="py-4 space-y-4">
             {/* --- Obsidian Settings --- */}
-            {selectedSource === 'obsidian' && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="obsidian-path">Vault Path (on Server)</Label>
-                  <SettingsTooltip content="The absolute path to your Obsidian vault on the server running SlySearch backend." />
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="obsidian-path"
-                      placeholder="/path/to/your/vault"
-                      value={getSelectedSourceSettings().path || ''}
-                      onChange={(e) => updateSelectedSourceSetting('path', e.target.value)}
-                      className="flex-grow"
-                    />
-                    {/* Add Browse Button */}
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsBrowserDialogOpen(true)}
-                    >
-                      Browse Vault
-                    </Button>
-                  </div>
-                </div>
-                {/* Add other Obsidian-specific settings here if needed */}
-              </>
-            )}
+            {selectedSource === 'obsidian' && (() => {
+                const obsSettings = getSelectedSourceSettings() as ObsidianSourceConfig;
+                if (!obsSettings || Object.keys(obsSettings).length === 0) return null;
+                return (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="obsidian-path">Vault Path (on Server)</Label>
+                      <SettingsTooltip content="The absolute path to your Obsidian vault on the server running SlySearch backend." />
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id="obsidian-path"
+                          placeholder="/path/to/your/vault"
+                          value={obsSettings.path ?? ''}
+                          onChange={(e) => updateSelectedSourceSetting('path', e.target.value)}
+                          className="flex-grow"
+                        />
+                        {/* Add Browse Button */}
+                        <Button
+                          variant="outline"
+                          onClick={() => setIsBrowserDialogOpen(true)}
+                        >
+                          Browse Vault
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                );
+            })()}
 
             {/* --- Local Files Settings --- */}
-            {selectedSource === 'local' && (
-              <div className="space-y-2">
-                <Label htmlFor="localfiles-path">Directory Path (on Server)</Label>
-                <SettingsTooltip content="The absolute path to the directory containing files to index on the server." />
-                <Input
-                  id="localfiles-path"
-                  placeholder="/path/to/your/files"
-                  value={getSelectedSourceSettings().path || ''}
-                  onChange={(e) => updateSelectedSourceSetting('path', e.target.value)}
-                />
-              </div>
-            )}
+            {selectedSource === 'localFiles' && (() => {
+                const lfSettings = getSelectedSourceSettings() as LocalFilesSourceConfig;
+                if (!lfSettings || Object.keys(lfSettings).length === 0) return null;
+                return (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="localfiles-path">Directory Path (on Server)</Label>
+                      <SettingsTooltip content="The absolute path to the directory containing files to index on the server." />
+                      <Input
+                        id="localfiles-path"
+                        placeholder="/path/to/your/files"
+                        value={lfSettings.path ?? ''}
+                        onChange={(e) => updateSelectedSourceSetting('path', e.target.value)}
+                      />
+                    </div>
+                  </>
+                );
+            })()}
 
             {/* --- AI Settings --- */}
-            {selectedSource === 'ai' && (
-              <>
-                <div className="space-y-2">
-                  <div className="flex items-center">
-                    <Label htmlFor="ai-provider">AI Provider</Label>
-                    <SettingsTooltip content="Select the AI provider to use for generating responses." />
+            {selectedSource === 'ai' && (() => {
+              const aiSettings = getSelectedSourceSettings() as AISourceConfig;
+              if (!aiSettings || Object.keys(aiSettings).length === 0) return null;
+              return (
+                <>
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <Label htmlFor="ai-provider">AI Provider</Label>
+                      <SettingsTooltip content="Select the AI provider to use for generating responses." />
+                    </div>
+                    <Select
+                      value={aiSettings.provider}
+                      onValueChange={(value) => updateSelectedSourceSetting("provider", value)}
+                    >
+                      <SelectTrigger id="ai-provider">
+                        <SelectValue placeholder="Select provider" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="openai">OpenAI</SelectItem>
+                        <SelectItem value="anthropic">Anthropic</SelectItem>
+                        <SelectItem value="google">Google AI</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <Select
-                    value={(getSelectedSourceSettings() as AISourceConfig).provider || "openai"}
-                    onValueChange={(value) => updateSelectedSourceSetting("provider", value)}
-                  >
-                    <SelectTrigger id="ai-provider">
-                      <SelectValue placeholder="Select provider" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="openai">OpenAI</SelectItem>
-                      <SelectItem value="anthropic">Anthropic</SelectItem>
-                      <SelectItem value="google">Google AI</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center">
-                    <Label htmlFor="ai-api-key">API Key</Label>
-                    <SettingsTooltip content="Your API key for the selected AI provider." />
-                  </div>
-                  <Input
-                    id="ai-api-key"
-                    type="password"
-                    value={(getSelectedSourceSettings() as AISourceConfig).apiKey || ""}
-                    onChange={(e) => updateSelectedSourceSetting("apiKey", e.target.value)}
-                    placeholder="Enter API key"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center">
-                    <Label htmlFor="ai-model">Model</Label>
-                    <SettingsTooltip content="The AI model to use for generating responses." />
-                  </div>
-                  <Select
-                    value={(getSelectedSourceSettings() as AISourceConfig).model || "gpt-4o"}
-                    onValueChange={(value) => updateSelectedSourceSetting("model", value)}
-                  >
-                    <SelectTrigger id="ai-model">
-                      <SelectValue placeholder="Select model" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                      <SelectItem value="gpt-4">GPT-4</SelectItem>
-                      <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                      <SelectItem value="claude-3-opus">Claude 3 Opus</SelectItem>
-                      <SelectItem value="claude-3-sonnet">Claude 3 Sonnet</SelectItem>
-                      <SelectItem value="gemini-pro">Gemini Pro</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center">
-                    <Label htmlFor="ai-temperature">Temperature</Label>
-                    <SettingsTooltip content="Controls randomness in the AI's responses. Lower values are more deterministic, higher values are more creative." />
-                  </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <Label htmlFor="ai-api-key">API Key</Label>
+                      <SettingsTooltip content="Your API key for the selected AI provider." />
+                    </div>
                     <Input
-                      id="ai-temperature"
-                      type="range"
-                      min="0"
-                      max="2"
-                      step="0.1"
-                      value={(getSelectedSourceSettings() as AISourceConfig).temperature || "0.7"}
-                      onChange={(e) => updateSelectedSourceSetting("temperature", Number.parseFloat(e.target.value))}
-                      className="flex-1"
+                      id="ai-api-key"
+                      type="password"
+                      value={aiSettings.apiKey ?? ''}
+                      onChange={(e) => updateSelectedSourceSetting("apiKey", e.target.value)}
+                      placeholder="Enter API key"
                     />
-                    <span className="text-sm w-10 text-center">{((getSelectedSourceSettings() as AISourceConfig).temperature) || "0.7"}</span>
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center">
-                    <Label htmlFor="ai-max-tokens">Max Tokens</Label>
-                    <SettingsTooltip content="Maximum number of tokens in the AI's response." />
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <Label htmlFor="ai-model">Model</Label>
+                      <SettingsTooltip content="The AI model to use for generating responses." />
+                    </div>
+                    <Select
+                      value={aiSettings.model}
+                      onValueChange={(value) => updateSelectedSourceSetting("model", value)}
+                    >
+                      <SelectTrigger id="ai-model">
+                        <SelectValue placeholder="Select model" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="gpt-4o">GPT-4o</SelectItem>
+                        <SelectItem value="gpt-4">GPT-4</SelectItem>
+                        <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
+                        <SelectItem value="claude-3-opus">Claude 3 Opus</SelectItem>
+                        <SelectItem value="claude-3-sonnet">Claude 3 Sonnet</SelectItem>
+                        <SelectItem value="gemini-pro">Gemini Pro</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <Input
-                    id="ai-max-tokens"
-                    type="number"
-                    min="100"
-                    max="4000"
-                    step="100"
-                    value={(getSelectedSourceSettings() as AISourceConfig).maxTokens || "1000"}
-                    onChange={(e) => updateSelectedSourceSetting("maxTokens", Number.parseInt(e.target.value))}
-                    placeholder="1000"
-                  />
-                </div>
-              </>
-            )}
+
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <Label htmlFor="ai-temperature">Temperature</Label>
+                      <SettingsTooltip content="Controls randomness in the AI's responses. Lower values are more deterministic, higher values are more creative." />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        id="ai-temperature"
+                        type="range"
+                        min="0"
+                        max="2"
+                        step="0.1"
+                        value={aiSettings.temperature}
+                        onChange={(e) => updateSelectedSourceSetting("temperature", e.target.value)}
+                        className="flex-1"
+                      />
+                      <span className="text-sm w-10 text-center">{aiSettings.temperature}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <Label htmlFor="ai-max-tokens">Max Tokens</Label>
+                      <SettingsTooltip content="Maximum number of tokens in the AI's response." />
+                    </div>
+                    <Input
+                      id="ai-max-tokens"
+                      type="number"
+                      min="100"
+                      max="4000"
+                      step="100"
+                      value={aiSettings.maxTokens}
+                      onChange={(e) => updateSelectedSourceSetting("maxTokens", e.target.value)}
+                      placeholder="1000"
+                    />
+                  </div>
+                </>
+              );
+            })()}
 
             {/* --- YouTube Settings --- */}
-            {selectedSource === 'youtube' && (
-              <>
-                <div className="space-y-2">
-                  <div className="flex items-center">
-                    <Label htmlFor="youtube-api-key">YouTube API Key</Label>
-                    <SettingsTooltip content="Your YouTube Data API key for searching videos." />
-                  </div>
-                  <Input
-                    id="youtube-api-key"
-                    type="password"
-                    value={(getSelectedSourceSettings() as YouTubeSourceConfig).apiKey || ""}
-                    onChange={(e) => updateSelectedSourceSetting("apiKey", e.target.value)}
-                    placeholder="Enter API key"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center">
-                    <Label htmlFor="youtube-max-results">Max Results</Label>
-                    <SettingsTooltip content="Maximum number of results to return from YouTube searches." />
-                  </div>
-                  <Input
-                    id="youtube-max-results"
-                    type="number"
-                    min="1"
-                    max="50"
-                    value={(getSelectedSourceSettings() as YouTubeSourceConfig).maxResults || "10"}
-                    onChange={(e) => updateSelectedSourceSetting("maxResults", Number.parseInt(e.target.value))}
-                    placeholder="10"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center">
-                      <Label htmlFor="youtube-include-channels">Include Channels</Label>
-                      <SettingsTooltip content="Include YouTube channels in search results." />
+            {selectedSource === 'youtube' && (() => {
+                const ytSettings = getSelectedSourceSettings() as YouTubeSourceConfig;
+                if (!ytSettings || Object.keys(ytSettings).length === 0) return null;
+                return (
+                  <>
+                    <div className="space-y-2">
+                      <div className="flex items-center">
+                        <Label htmlFor="youtube-api-key">YouTube API Key</Label>
+                        <SettingsTooltip content="Your YouTube Data API key for searching videos." />
+                      </div>
+                      <Input
+                        id="youtube-api-key"
+                        type="password"
+                        value={ytSettings.apiKey ?? ''}
+                        onChange={(e) => updateSelectedSourceSetting("apiKey", e.target.value)}
+                        placeholder="Enter API key"
+                      />
                     </div>
-                    <div className="text-sm text-muted-foreground">Show channel results in searches</div>
-                  </div>
-                  <Switch
-                    id="youtube-include-channels"
-                    checked={(getSelectedSourceSettings() as YouTubeSourceConfig).includeChannels !== false}
-                    onCheckedChange={(checked) => updateSelectedSourceSetting("includeChannels", checked)}
-                  />
-                </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center">
-                      <Label htmlFor="youtube-include-playlists">Include Playlists</Label>
-                      <SettingsTooltip content="Include YouTube playlists in search results." />
+                    <div className="space-y-2">
+                      <div className="flex items-center">
+                        <Label htmlFor="youtube-max-results">Max Results</Label>
+                        <SettingsTooltip content="Maximum number of results to return from YouTube searches." />
+                      </div>
+                      <Input
+                        id="youtube-max-results"
+                        type="number"
+                        min="1"
+                        max="50"
+                        value={ytSettings.maxResults}
+                        onChange={(e) => updateSelectedSourceSetting("maxResults", e.target.value)}
+                        placeholder="10"
+                      />
                     </div>
-                    <div className="text-sm text-muted-foreground">Show playlist results in searches</div>
-                  </div>
-                  <Switch
-                    id="youtube-include-playlists"
-                    checked={(getSelectedSourceSettings() as YouTubeSourceConfig).includePlaylists !== false}
-                    onCheckedChange={(checked) => updateSelectedSourceSetting("includePlaylists", checked)}
-                  />
-                </div>
-              </>
-            )}
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center">
+                          <Label htmlFor="youtube-include-channels">Include Channels</Label>
+                          <SettingsTooltip content="Include YouTube channels in search results." />
+                        </div>
+                        <div className="text-sm text-muted-foreground">Show channel results in searches</div>
+                      </div>
+                      <Switch
+                        id="youtube-include-channels"
+                        checked={ytSettings.includeChannels === true}
+                        onCheckedChange={(checked) => updateSelectedSourceSetting("includeChannels", checked)}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center">
+                          <Label htmlFor="youtube-include-playlists">Include Playlists</Label>
+                          <SettingsTooltip content="Include YouTube playlists in search results." />
+                        </div>
+                        <div className="text-sm text-muted-foreground">Show playlist results in searches</div>
+                      </div>
+                      <Switch
+                        id="youtube-include-playlists"
+                        checked={ytSettings.includePlaylists === true}
+                        onCheckedChange={(checked) => updateSelectedSourceSetting("includePlaylists", checked)}
+                      />
+                    </div>
+                  </>
+                );
+            })()}
 
             {/* --- SoundCloud Settings --- */}
-            {selectedSource === 'soundcloud' && (
-              <>
-                <div className="space-y-2">
-                  <div className="flex items-center">
-                    <Label htmlFor="soundcloud-client-id">SoundCloud Client ID</Label>
-                    <SettingsTooltip content="Your SoundCloud API client ID for searching tracks." />
-                  </div>
-                  <Input
-                    id="soundcloud-client-id"
-                    type="password"
-                    value={(getSelectedSourceSettings() as SoundCloudSourceConfig).clientId || ""}
-                    onChange={(e) => updateSelectedSourceSetting("clientId", e.target.value)}
-                    placeholder="Enter Client ID"
-                  />
-                </div>
+            {selectedSource === 'soundcloud' && (() => {
+                const scSettings = getSelectedSourceSettings() as SoundCloudSourceConfig;
+                if (!scSettings || Object.keys(scSettings).length === 0) return null;
 
-                <div className="space-y-2">
-                  <div className="flex items-center">
-                    <Label htmlFor="soundcloud-max-results">Max Results</Label>
-                    <SettingsTooltip content="Maximum number of results to return from SoundCloud searches." />
-                  </div>
-                  <Input
-                    id="soundcloud-max-results"
-                    type="number"
-                    min="1"
-                    max="50"
-                    value={(getSelectedSourceSettings() as SoundCloudSourceConfig).maxResults || "10"}
-                    onChange={(e) => updateSelectedSourceSetting("maxResults", Number.parseInt(e.target.value))}
-                    placeholder="10"
-                  />
-                </div>
+                // Assign properties to local constants AFTER the check
+                const clientId = scSettings.clientId ?? '';
+                const maxResults = scSettings.maxResults;
+                const includeUsers = scSettings.includeUsers === true;
+                const includePlaylists = scSettings.includePlaylists === true;
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center">
-                      <Label htmlFor="soundcloud-include-users">Include Users</Label>
-                      <SettingsTooltip content="Include SoundCloud users in search results." />
+                return (
+                  <>
+                    <div className="space-y-2">
+                       <Label>SoundCloud Client ID</Label>
+                      <Input
+                        id="soundcloud-client-id"
+                        type="password"
+                        value={clientId} // Use constant
+                        onChange={(e) => updateSelectedSourceSetting("clientId", e.target.value)}
+                        placeholder="Enter Client ID"
+                      />
                     </div>
-                    <div className="text-sm text-muted-foreground">Show user results in searches</div>
-                  </div>
-                  <Switch
-                    id="soundcloud-include-users"
-                    checked={(getSelectedSourceSettings() as SoundCloudSourceConfig).includeUsers !== false}
-                    onCheckedChange={(checked) => updateSelectedSourceSetting("includeUsers", checked)}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center">
-                      <Label htmlFor="soundcloud-include-playlists">Include Playlists</Label>
-                      <SettingsTooltip content="Include SoundCloud playlists in search results." />
+                    <div className="space-y-2">
+                       <Label>Max Results</Label>
+                      <Input
+                        id="soundcloud-max-results"
+                        type="number"
+                        min="1"
+                        max="50"
+                        value={maxResults} // Use constant
+                        onChange={(e) => updateSelectedSourceSetting("maxResults", e.target.value)}
+                        placeholder="10"
+                      />
                     </div>
-                    <div className="text-sm text-muted-foreground">Show playlist results in searches</div>
-                  </div>
-                  <Switch
-                    id="soundcloud-include-playlists"
-                    checked={(getSelectedSourceSettings() as SoundCloudSourceConfig).includePlaylists !== false}
-                    onCheckedChange={(checked) => updateSelectedSourceSetting("includePlaylists", checked)}
-                  />
-                </div>
-              </>
-            )}
+                    <div className="flex items-center justify-between">
+                       <Label>Include Users</Label>
+                      <Switch
+                        id="soundcloud-include-users"
+                        checked={includeUsers} // Use constant
+                        onCheckedChange={(checked) => updateSelectedSourceSetting("includeUsers", checked)}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                       <Label>Include Playlists</Label>
+                      <Switch
+                        id="soundcloud-include-playlists"
+                        checked={includePlaylists} // Use constant
+                        onCheckedChange={(checked) => updateSelectedSourceSetting("includePlaylists", checked)}
+                      />
+                    </div>
+                  </>
+                );
+             })()}
 
             {/* --- Settings for Newly Added Custom Source Types --- */}
             {selectedSource && !['obsidian', 'local', 'ai', 'youtube', 'soundcloud', 'normal'].includes(selectedSource) && (

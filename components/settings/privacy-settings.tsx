@@ -18,8 +18,8 @@ export function PrivacySettings({ settings, updateSetting }: PrivacySettingsProp
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Private Bungalow</CardTitle>
-        <CardDescription>Configure privacy-related options</CardDescription>
+        <CardTitle>Low Pro Zone</CardTitle>
+        <CardDescription>Keep your search sessions on the down-low</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
@@ -28,7 +28,7 @@ export function PrivacySettings({ settings, updateSetting }: PrivacySettingsProp
               <Label htmlFor="remove-trackers">Remove Trackers</Label>
               <SettingsTooltip content="When enabled, SearXNG will attempt to remove tracking elements from URLs in search results." />
             </div>
-            <div className="text-sm text-muted-foreground">Remove tracking elements from URLs</div>
+            <div className="text-sm text-muted-foreground">Wipe your footprints from URLs</div>
           </div>
           <Switch
             id="remove-trackers"
@@ -43,7 +43,7 @@ export function PrivacySettings({ settings, updateSetting }: PrivacySettingsProp
               <Label htmlFor="proxy-images">Proxy Images</Label>
               <SettingsTooltip content="Route image requests through SearXNG to prevent direct connections to image hosts, enhancing privacy." />
             </div>
-            <div className="text-sm text-muted-foreground">Route image requests through SearXNG</div>
+            <div className="text-sm text-muted-foreground">Route image requests through the shack (hides your IP)</div>
           </div>
           <Switch
             id="proxy-images"
@@ -58,7 +58,7 @@ export function PrivacySettings({ settings, updateSetting }: PrivacySettingsProp
               <Label htmlFor="query-in-title">Query in Page Title</Label>
               <SettingsTooltip content="Include search query in the page title. Note: This decreases privacy as browser history will contain your search terms." />
             </div>
-            <div className="text-sm text-muted-foreground">Include search query in the page title</div>
+            <div className="text-sm text-muted-foreground">Show your search query in the browser title (less low pro!)</div>
           </div>
           <Switch
             id="query-in-title"
@@ -73,7 +73,7 @@ export function PrivacySettings({ settings, updateSetting }: PrivacySettingsProp
               <Label htmlFor="method">HTTP Method</Label>
               <SettingsTooltip content="POST queries are more secure as they don't show up in history but may cause problems when using Firefox containers." />
             </div>
-            <div className="text-sm text-muted-foreground">Method for sending search queries</div>
+            <div className="text-sm text-muted-foreground">How you send your search query (POST hides it better)</div>
           </div>
           <Select
             value={currentSettings.method || "POST"}
@@ -95,7 +95,7 @@ export function PrivacySettings({ settings, updateSetting }: PrivacySettingsProp
               <Label htmlFor="url-anonymizer">URL Anonymizer</Label>
               <SettingsTooltip content="Route search result clicks through an anonymizing service to prevent sites from knowing you came from a search engine." />
             </div>
-            <div className="text-sm text-muted-foreground">Anonymize outgoing result links</div>
+            <div className="text-sm text-muted-foreground">Use a detour for result links (sites won't know you came from search)</div>
           </div>
           <Switch
             id="url-anonymizer"
@@ -110,7 +110,7 @@ export function PrivacySettings({ settings, updateSetting }: PrivacySettingsProp
               <Label htmlFor="block-cookies">Block Cookies</Label>
               <SettingsTooltip content="Prevent search engines from setting cookies when SearXNG makes requests to them." />
             </div>
-            <div className="text-sm text-muted-foreground">Block cookies from search engines</div>
+            <div className="text-sm text-muted-foreground">Stop search engines from leaving tracking cookies</div>
           </div>
           <Switch
             id="block-cookies"

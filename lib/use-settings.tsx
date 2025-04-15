@@ -53,9 +53,9 @@ interface SettingsContextType {
   ) => void;
   saveSettings: () => Promise<void>;
   resetSettings: () => Promise<void>;
-  saveLoadout: (type: 'engine' | 'surf', name: string, config: any) => void;
-  selectLoadout: (type: 'engine' | 'surf', id: string) => void;
-  deleteLoadout: (type: 'engine' | 'surf', id: string) => void;
+  saveLoadout: (type: "engines" | "surf", name: string, config: any) => void;
+  selectLoadout: (type: "engines" | "surf", id: string) => void;
+  deleteLoadout: (type: "engines" | "surf", id: string) => void;
 }
 
 // Create the context with a default value
@@ -305,7 +305,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   // --- Loadout functions ---
   const saveLoadout = useCallback(
     (
-      type: 'engine' | 'surf',
+      type: "engines" | "surf",
       name: string,
       config: any
     ) => {
@@ -313,7 +313,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         const newSettings = JSON.parse(JSON.stringify(prev));
         let existingLoadoutFound = false;
 
-        if (type === 'engine') {
+        if (type === "engines") {
           existingLoadoutFound = !!prev.engines?.loadouts?.some(l => l.name === name);
           if (existingLoadoutFound) {
             console.warn(`Engine loadout named "${name}" already exists.`);
@@ -325,7 +325,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           const id = uuidv4();
           newSettings.engines.loadouts.push({ id, name, config: (config as Engine[] | undefined) ?? [] });
           console.log(`Saved new engine loadout: ${name}`);
-        } else if (type === 'surf') {
+        } else if (type === "surf") {
           existingLoadoutFound = !!prev.personalSources?.loadouts?.some(l => l.name === name);
           if (existingLoadoutFound) {
             console.warn(`Surf loadout named "${name}" already exists.`);
@@ -346,13 +346,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     [setError]
   );
 
-  const selectLoadout = useCallback((type: 'engine' | 'surf', id: string) => {
+  const selectLoadout = useCallback((type: "engines" | "surf", id: string) => {
     setSettings((prev) => {
       const newSettings = JSON.parse(JSON.stringify(prev));
       let selectedLoadoutConfig: Engine[] | SourceListItem[] | undefined;
       let loadoutFound = false;
 
-      if (type === 'engine') {
+      if (type === "engines") {
         const loadout = prev.engines?.loadouts?.find(l => l.id === id);
         if (loadout) {
           selectedLoadoutConfig = loadout.config;
@@ -361,7 +361,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           console.log(`Selected engine loadout: ${loadout.name}`);
           loadoutFound = true;
         }
-      } else { // type === 'surf'
+      } else { // type === "surf"
         const loadout = prev.personalSources?.loadouts?.find(l => l.id === id);
         if (loadout) {
           selectedLoadoutConfig = loadout.config;
@@ -381,12 +381,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const deleteLoadout = useCallback((type: 'engine' | 'surf', id: string) => {
+  const deleteLoadout = useCallback((type: "engines" | "surf", id: string) => {
     setSettings((prev) => {
       const newSettings = JSON.parse(JSON.stringify(prev));
       let loadoutDeleted = false;
 
-      if (type === 'engine') {
+      if (type === "engines") {
         if (newSettings.engines?.loadouts) {
           const initialLength = newSettings.engines.loadouts.length;
           newSettings.engines.loadouts = newSettings.engines.loadouts.filter((l: EngineLoadout) => l.id !== id);
@@ -394,7 +394,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
               loadoutDeleted = true;
           }
         }
-      } else { // type === 'surf'
+      } else { // type === "surf"
         if (newSettings.personalSources?.loadouts) {
           const initialLength = newSettings.personalSources.loadouts.length;
           newSettings.personalSources.loadouts = newSettings.personalSources.loadouts.filter((l: SourceLoadout) => l.id !== id);

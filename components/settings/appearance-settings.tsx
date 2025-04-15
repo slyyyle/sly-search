@@ -19,13 +19,13 @@ export function AppearanceSettings({ settings, updateSetting }: AppearanceSettin
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Appearance Settings</CardTitle>
-        <CardDescription>Customize the look and feel of SlySearch</CardDescription>
+        <CardTitle>Wax & Decals</CardTitle>
+        <CardDescription>Customize the look and feel of your board</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <div className="flex items-center">
-            <Label>Theme Style</Label>
+            <Label>Board Style</Label>
             <SettingsTooltip content="Select the visual theme for your SearXNG instance." />
           </div>
           <div className="grid grid-cols-1 gap-2">
@@ -45,7 +45,7 @@ export function AppearanceSettings({ settings, updateSetting }: AppearanceSettin
               <Label htmlFor="center-alignment">Center Alignment</Label>
               <SettingsTooltip content="When enabled, search results will be centered on the page instead of left-aligned." />
             </div>
-            <div className="text-sm text-muted-foreground">Center align the search results</div>
+            <div className="text-sm text-muted-foreground">Center the results on your board</div>
           </div>
           <Switch
             id="center-alignment"
@@ -56,7 +56,7 @@ export function AppearanceSettings({ settings, updateSetting }: AppearanceSettin
 
         <div className="space-y-2">
           <div className="flex items-center">
-            <Label htmlFor="results-layout">Results Layout</Label>
+            <Label htmlFor="results-layout">Results Flow</Label>
             <SettingsTooltip content="Choose how search results are displayed on the page." />
           </div>
           <Select
@@ -76,7 +76,7 @@ export function AppearanceSettings({ settings, updateSetting }: AppearanceSettin
 
         <div className="space-y-2">
           <div className="flex items-center">
-            <Label htmlFor="default-locale">Default Interface Locale</Label>
+            <Label htmlFor="default-locale">Shack Language</Label>
             <SettingsTooltip content="Default interface language. Leave blank to detect from browser information." />
           </div>
           <Select
@@ -99,7 +99,7 @@ export function AppearanceSettings({ settings, updateSetting }: AppearanceSettin
 
         <div className="space-y-2">
           <div className="flex items-center">
-            <Label htmlFor="hotkeys">Hotkeys</Label>
+            <Label htmlFor="hotkeys">Quick Controls</Label>
             <SettingsTooltip content="Keyboard shortcut configuration for navigating search results." />
           </div>
           <Select
@@ -118,7 +118,7 @@ export function AppearanceSettings({ settings, updateSetting }: AppearanceSettin
 
         <div className="space-y-2">
           <div className="flex items-center">
-            <Label htmlFor="url-format">URL Formatting</Label>
+            <Label htmlFor="url-format">Link Style</Label>
             <SettingsTooltip content="Controls how URLs are displayed in search results: pretty (shortened), full (complete URL), or host (domain only)." />
           </div>
           <Select
