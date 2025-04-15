@@ -7,10 +7,24 @@ import { v4 as uuidv4 } from "uuid";
 
 // Keep the imports from the schema file
 import {
-  AppSettings,
+  type AppSettings,
   appSettingsSchema,
-  engineSchema,
-  sourceListItemSchema,
+  type engineSchema,
+  type sourceListItemSchema,
+  type EngineLoadout,
+  type SourceLoadout,
+  type ObsidianSourceConfig,
+  type LocalFilesSourceConfig,
+  type AISourceConfig,
+  type YouTubeSourceConfig,
+  type SoundCloudSourceConfig,
+  type SourceListItem,
+  type Engine
+} from "./settings-schema";
+
+// Ensure these types are exported
+export type {
+  AppSettings,
   EngineLoadout,
   SourceLoadout,
   ObsidianSourceConfig,
@@ -20,7 +34,32 @@ import {
   SoundCloudSourceConfig,
   SourceListItem,
   Engine
-} from "./settings-schema";
+};
+export { appSettingsSchema }; // Export value separately
+// No need to re-export schema types directly if only used internally or via AppSettings
+
+// Define the context type
+// Ensure this type is exported
+export type { SettingsContextType };
+interface SettingsContextType {
+  settings: AppSettings;
+  loading: boolean;
+  error: string | null;
+  isInitialLoadComplete: boolean;
+  updateSetting: (
+    section: keyof AppSettings | keyof AppSettings["personalSources"], // Allow top-level or personalSources sections
+    key: string, // Key within the section or specific source ID
+    value: any
+  ) => void;
+  saveSettings: () => Promise<void>;
+  resetSettings: () => Promise<void>;
+  saveLoadout: (type: 'engine' | 'surf', name: string, config: any) => void;
+  selectLoadout: (type: 'engine' | 'surf', id: string) => void;
+  deleteLoadout: (type: 'engine' | 'surf', id: string) => void;
+}
+
+// Create the context with a default value
+const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 // --- Keep Default Settings Definition Here ---
 const defaultSettings: AppSettings = {
@@ -94,38 +133,6 @@ const defaultSettings: AppSettings = {
     soundcloud: { maxResults: "10", includeUsers: true, includePlaylists: true, clientId: undefined },
   },
 };
-
-// Define the context shape using the imported AppSettings type
-export interface SettingsContextType {
-  settings: AppSettings;
-  updateSetting: (section: keyof AppSettings, key: string, value: any) => void;
-  saveSettings: () => Promise<void>;
-  resetSettings: () => Promise<void>;
-  // Use z.infer with imported schemas
-  saveLoadout: (
-    type: "engines" | "surf",
-    name: string,
-    config: z.infer<typeof engineSchema>[] | z.infer<typeof sourceListItemSchema>[] | undefined
-  ) => void;
-  selectLoadout: (type: "engines" | "surf", id: string) => void;
-  deleteLoadout: (type: "engines" | "surf", id: string) => void;
-  loading: boolean;
-  error: string | null;
-  isInitialLoadComplete: boolean;
-}
-
-const SettingsContext = createContext<SettingsContextType>({
-  settings: defaultSettings,
-  updateSetting: () => {},
-  saveSettings: async () => {},
-  resetSettings: async () => {},
-  saveLoadout: () => {},
-  selectLoadout: () => {},
-  deleteLoadout: () => {},
-  loading: false,
-  error: null,
-  isInitialLoadComplete: false,
-});
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   // State Hooks
@@ -215,7 +222,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // --- Update a specific setting in local state ---
-  const updateSetting = useCallback((section: keyof AppSettings, key: string, value: any) => {
+  const updateSetting = useCallback((section: keyof AppSettings | keyof AppSettings["personalSources"], key: string, value: any) => {
     setSettings((prev) => {
       const newSettings = JSON.parse(JSON.stringify(prev));
       if (newSettings[section]) {
@@ -298,15 +305,15 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   // --- Loadout functions ---
   const saveLoadout = useCallback(
     (
-      type: "engines" | "surf",
+      type: 'engine' | 'surf',
       name: string,
-      config: z.infer<typeof engineSchema>[] | z.infer<typeof sourceListItemSchema>[] | undefined
+      config: any
     ) => {
       setSettings((prev) => {
         const newSettings = JSON.parse(JSON.stringify(prev));
         let existingLoadoutFound = false;
 
-        if (type === "engines") {
+        if (type === 'engine') {
           existingLoadoutFound = !!prev.engines?.loadouts?.some(l => l.name === name);
           if (existingLoadoutFound) {
             console.warn(`Engine loadout named "${name}" already exists.`);
@@ -318,7 +325,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           const id = uuidv4();
           newSettings.engines.loadouts.push({ id, name, config: (config as Engine[] | undefined) ?? [] });
           console.log(`Saved new engine loadout: ${name}`);
-        } else if (type === "surf") {
+        } else if (type === 'surf') {
           existingLoadoutFound = !!prev.personalSources?.loadouts?.some(l => l.name === name);
           if (existingLoadoutFound) {
             console.warn(`Surf loadout named "${name}" already exists.`);
@@ -339,13 +346,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     [setError]
   );
 
-  const selectLoadout = useCallback((type: "engines" | "surf", id: string) => {
+  const selectLoadout = useCallback((type: 'engine' | 'surf', id: string) => {
     setSettings((prev) => {
       const newSettings = JSON.parse(JSON.stringify(prev));
       let selectedLoadoutConfig: Engine[] | SourceListItem[] | undefined;
       let loadoutFound = false;
 
-      if (type === "engines") {
+      if (type === 'engine') {
         const loadout = prev.engines?.loadouts?.find(l => l.id === id);
         if (loadout) {
           selectedLoadoutConfig = loadout.config;
@@ -354,7 +361,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           console.log(`Selected engine loadout: ${loadout.name}`);
           loadoutFound = true;
         }
-      } else { // type === "surf"
+      } else { // type === 'surf'
         const loadout = prev.personalSources?.loadouts?.find(l => l.id === id);
         if (loadout) {
           selectedLoadoutConfig = loadout.config;
@@ -374,12 +381,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const deleteLoadout = useCallback((type: "engines" | "surf", id: string) => {
+  const deleteLoadout = useCallback((type: 'engine' | 'surf', id: string) => {
     setSettings((prev) => {
       const newSettings = JSON.parse(JSON.stringify(prev));
       let loadoutDeleted = false;
 
-      if (type === "engines") {
+      if (type === 'engine') {
         if (newSettings.engines?.loadouts) {
           const initialLength = newSettings.engines.loadouts.length;
           newSettings.engines.loadouts = newSettings.engines.loadouts.filter((l: EngineLoadout) => l.id !== id);
@@ -387,7 +394,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
               loadoutDeleted = true;
           }
         }
-      } else { // type === "surf"
+      } else { // type === 'surf'
         if (newSettings.personalSources?.loadouts) {
           const initialLength = newSettings.personalSources.loadouts.length;
           newSettings.personalSources.loadouts = newSettings.personalSources.loadouts.filter((l: SourceLoadout) => l.id !== id);
@@ -429,5 +436,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useSettings(): SettingsContextType {
-  return useContext(SettingsContext);
+  const context = useContext(SettingsContext);
+  if (context === undefined) {
+    throw new Error('useSettings must be used within a SettingsProvider');
+  }
+  return context;
 }
