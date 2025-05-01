@@ -33,174 +33,8 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Base Setup</CardTitle>
-          <CardDescription>Your core connection & timing settings</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="instance-url">Backend URL</Label>
-              <SettingsTooltip content="The base URL of your SearXNG instance. For local instances, typically http://localhost:8888." />
-            </div>
-            <Input
-              id="instance-url"
-              value={currentSettings.instanceUrl || "http://localhost:8888"}
-              onChange={(e) => updateSetting("advanced", "instanceUrl", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="request-timeout">Paddle Out Timeout (sec)</Label>
-              <SettingsTooltip content="Default timeout in seconds for requests to search engines. Can be overridden by individual engines." />
-            </div>
-            <Input
-              id="request-timeout"
-              type="number"
-              value={currentSettings.requestTimeout || "5"}
-              min="1"
-              max="30"
-              onChange={(e) => updateSetting("advanced", "requestTimeout", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="max-request-timeout">Max Paddle Out Timeout (sec)</Label>
-              <SettingsTooltip content="The maximum timeout in seconds for any search engine request." />
-            </div>
-            <Input
-              id="max-request-timeout"
-              type="number"
-              value={currentSettings.maxRequestTimeout || "10"}
-              min="1"
-              max="60"
-              onChange={(e) => updateSetting("advanced", "maxRequestTimeout", e.target.value)}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>API Settings</CardTitle>
-          <CardDescription>Configure API formats & headless mode</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Label>Supported Response Formats</Label>
-              <SettingsTooltip content="Select which response formats your SearXNG instance should support." />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="format-json"
-                  checked={currentSettings.formats?.includes("json") !== false}
-                  onCheckedChange={(checked) => updateFormats("json", checked)}
-                />
-                <Label htmlFor="format-json">JSON (API)</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="format-html"
-                  checked={currentSettings.formats?.includes("html") !== false}
-                  onCheckedChange={(checked) => updateFormats("html", checked)}
-                />
-                <Label htmlFor="format-html">HTML</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="format-csv"
-                  checked={currentSettings.formats?.includes("csv") === true}
-                  onCheckedChange={(checked) => updateFormats("csv", checked)}
-                />
-                <Label htmlFor="format-csv">CSV</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="format-rss"
-                  checked={currentSettings.formats?.includes("rss") === true}
-                  onCheckedChange={(checked) => updateFormats("rss", checked)}
-                />
-                <Label htmlFor="format-rss">RSS</Label>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <div className="flex items-center">
-                <Label htmlFor="headless-mode">Headless Mode</Label>
-                <SettingsTooltip content="Enable headless mode for API-only operation. Disables the web UI." />
-              </div>
-              <div className="text-sm text-muted-foreground">Optimize for API-only usage (no UI)</div>
-            </div>
-            <Switch
-              id="headless-mode"
-              checked={currentSettings.headlessMode === true}
-              onCheckedChange={(checked) => updateSetting("advanced", "headlessMode", checked)}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Result Link Proxy</CardTitle>
-          <CardDescription>Route result links through the shack</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <div className="flex items-center">
-                <Label htmlFor="enable-result-proxy">Enable Result Proxy</Label>
-                <SettingsTooltip content="Enable proxying of search results through SearXNG for enhanced privacy." />
-              </div>
-              <div className="text-sm text-muted-foreground">Proxy result links through your instance</div>
-            </div>
-            <Switch
-              id="enable-result-proxy"
-              checked={currentSettings.enableResultProxy === true}
-              onCheckedChange={(checked) => updateSetting("advanced", "enableResultProxy", checked)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="result-proxy-url">Result Proxy URL</Label>
-              <SettingsTooltip content="URL for the result proxy. Usually the same as your instance URL with /proxy appended." />
-            </div>
-            <Input
-              id="result-proxy-url"
-              placeholder="http://localhost:8888/proxy"
-              value={currentSettings.resultProxyUrl || ""}
-              onChange={(e) => updateSetting("advanced", "resultProxyUrl", e.target.value)}
-              disabled={!currentSettings.enableResultProxy}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="result-proxy-key">Result Proxy Key</Label>
-              <SettingsTooltip content="Secret key for the result proxy. Should be a random string." />
-            </div>
-            <Input
-              id="result-proxy-key"
-              type="password"
-              placeholder="Enter proxy key"
-              value={currentSettings.resultProxyKey || ""}
-              onChange={(e) => updateSetting("advanced", "resultProxyKey", e.target.value)}
-              disabled={!currentSettings.enableResultProxy}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
+    <div className="space-y-6 w-full">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Connection Tuning</CardTitle>
           <CardDescription>Fine-tune connection pool & HTTP settings</CardDescription>
@@ -253,48 +87,19 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="w-full">
         <CardHeader>
-          <CardTitle>Dev Tools & Custom Code</CardTitle>
-          <CardDescription>Debugging options and custom CSS</CardDescription>
+          <CardTitle>Server Features</CardTitle>
+          <CardDescription>Advanced server-side features</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center">
-                <Label htmlFor="debug-mode">Debug Mode</Label>
-                <SettingsTooltip content="Enable debug mode for more verbose logging and potentially sensitive information display." />
-              </div>
-              <div className="text-sm text-muted-foreground">Enable debug mode for detailed logging</div>
-            </div>
-            <Switch
-              id="debug-mode"
-              checked={currentSettings.debugMode === true}
-              onCheckedChange={(checked) => updateSetting("advanced", "debugMode", checked)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="custom-css">Custom Board Spray</Label>
-              <Label htmlFor="redis-url">Redis URL</Label>
-              <SettingsTooltip content="URL to connect to Redis database. Used for caching and session management." />
-            </div>
-            <Input
-              id="redis-url"
-              placeholder="redis://username:password@localhost:6379/0"
-              value={currentSettings.redisUrl || ""}
-              onChange={(e) => updateSetting("advanced", "redisUrl", e.target.value)}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <div className="flex items-center">
                 <Label htmlFor="limiter">Rate Limiter</Label>
-                <SettingsTooltip content="Rate limit the number of requests on the instance, block some bots." />
+                <SettingsTooltip content="Enable rate limiting to protect against bots and abuse." />
               </div>
-              <div className="text-sm text-muted-foreground">Limit request rate to prevent abuse</div>
+              <div className="text-sm text-muted-foreground">Protect your spot from the masses</div>
             </div>
             <Switch
               id="limiter"
@@ -307,14 +112,28 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
             <div className="space-y-0.5">
               <div className="flex items-center">
                 <Label htmlFor="public-instance">Public Instance</Label>
-                <SettingsTooltip content="Enable features designed only for public instances. Adds additional security measures." />
+                <SettingsTooltip content="Enable features designed only for public instances, like rate limiting and abuse protection." />
               </div>
-              <div className="text-sm text-muted-foreground">Enable public instance features</div>
+              <div className="text-sm text-muted-foreground">Optimize for public access</div>
             </div>
             <Switch
               id="public-instance"
               checked={currentSettings.publicInstance === true}
               onCheckedChange={(checked) => updateSetting("advanced", "publicInstance", checked)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center">
+              <Label htmlFor="redis-url">Redis URL (optional)</Label>
+              <SettingsTooltip content="URL to connect to Redis database. Used for caching and rate limiting." />
+            </div>
+            <Input
+              id="redis-url"
+              placeholder="unix:///usr/local/searxng-redis/run/redis.sock?db=0"
+              value={currentSettings.redisUrl || ""}
+              onChange={(e) => updateSetting("advanced", "redisUrl", e.target.value)}
+              disabled={true}
             />
           </div>
         </CardContent>

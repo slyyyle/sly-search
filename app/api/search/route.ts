@@ -3,9 +3,10 @@ import { type NextRequest, NextResponse } from "next/server"
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const query = searchParams.get("q")
+  const source = searchParams.get("source") || "web"
   const ragMode = searchParams.get("rag") || "normal"
-  const page = Number.parseInt(searchParams.get("page") || "1", 10)
-  const resultsPerPage = Number.parseInt(searchParams.get("resultsPerPage") || "10", 10)
+  const page = Number.parseInt(searchParams.get("pageno") || "1", 10)
+  const resultsPerPage = Number.parseInt(searchParams.get("results") || "10", 10)
 
   // Get additional settings from the request
   const safeSearch = searchParams.get("safesearch") || "0"
@@ -41,6 +42,7 @@ export async function GET(request: NextRequest) {
     // Build the search URL with parameters
     const searchUrl = new URL(`${backendUrl}/search`)
     searchUrl.searchParams.append("q", query)
+    searchUrl.searchParams.append("source", source)
 
     // Add pagination parameters
     searchUrl.searchParams.append("pageno", page.toString())
@@ -134,20 +136,24 @@ export async function GET(request: NextRequest) {
       }
 
       return NextResponse.json(data)
-    } catch (fetchError) {
+    } catch (fetchError: unknown) {
       console.error("Fetch error:", fetchError)
 
-      // Check if it's a timeout error
-      if (fetchError.name === "AbortError") {
-        console.log("Request timed out, returning mock data")
-      } else {
-        console.log("Fetch failed, returning mock data")
+      // Check if it's a timeout error using instanceof Error
+      let isTimeout = false;
+      if (fetchError instanceof Error && fetchError.name === "AbortError") {
+        console.log("Request timed out, returning mock data");
+        isTimeout = true;
+      }
+
+      if (!isTimeout) {
+        console.log("Fetch failed, returning mock data");
       }
 
       // Return mock data as fallback
       return NextResponse.json(getMockSearchResults(query, ragMode, page, resultsPerPage))
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Search API error:", error)
     // Return mock data as fallback
     return NextResponse.json(getMockSearchResults(query, ragMode, page, resultsPerPage))

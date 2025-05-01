@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import type { VaultBrowseResponse } from "@/types/obsidian";
 
-// FIXME: Get the actual backend URL dynamically (e.g., from env vars or a settings service)
-const BACKEND_BASE_URL = process.env.BACKEND_INSTANCE_URL || "http://localhost:8888";
+// Standardize on NEXT_PUBLIC_BACKEND_URL as it's needed by next.config
+const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000"; // Use NEXT_PUBLIC_
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);

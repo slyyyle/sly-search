@@ -31,64 +31,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("general")
   const [hasChanges, setHasChanges] = useState(false)
   const [savedSettingsState, setSavedSettingsState] = useState<typeof settings | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<"connected" | "disconnected" | "checking">("checking")
-  const [connectionMessage, setConnectionMessage] = useState<string>("")
-  const [checkingInterval, setCheckingInterval] = useState<NodeJS.Timeout | null>(null)
   const initialLoadCompleteRef = useRef(false);
-
-  // Check connection to backend
-  const checkConnection = async () => {
-    setConnectionStatus("checking")
-    try {
-      // Use our own API endpoint which will check the backend
-      const response = await fetch("/api/health", {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-        },
-        // Add a timeout to avoid long waits
-        signal: AbortSignal.timeout(3000),
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        if (data.status === "ok") {
-          setConnectionStatus("connected")
-          setConnectionMessage(data.message || "Connected to backend")
-        } else {
-          setConnectionStatus("disconnected")
-          setConnectionMessage(data.message || "Backend unavailable")
-        }
-      } else {
-        setConnectionStatus("disconnected")
-        setConnectionMessage("Health check failed")
-      }
-    } catch (err) {
-      console.error("Error checking connection:", err)
-      setConnectionStatus("disconnected")
-      setConnectionMessage("Connection error")
-    }
-  }
-
-  // Initial connection check and periodic checks
-  useEffect(() => {
-    // Check connection immediately
-    checkConnection()
-
-    // Set up periodic checks every 30 seconds
-    const interval = setInterval(() => {
-      checkConnection()
-    }, 30000)
-
-    setCheckingInterval(interval)
-
-    // Clean up interval on unmount
-    return () => {
-      if (checkingInterval) {
-        clearInterval(checkingInterval)
-      }
-    }
-  }, [])
 
   // Effect to initialize savedSettingsState once initial settings load is complete
   useEffect(() => {
@@ -169,45 +112,10 @@ export default function SettingsPage() {
           {/* Render Logo component, passing dynamic text when available */}
           <Logo size="small" text={headerText} />
           <div className="ml-auto flex items-center">
-            <div className="flex items-center mr-4">
-              {connectionStatus === "checking" ? (
-                <div className="flex items-center">
-                  <div className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></div>
-                  <span className="text-xs text-muted-foreground">Checking...</span>
-                </div>
-              ) : connectionStatus === "connected" ? (
-                <div className="flex items-center">
-                  <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-                  <span className="text-xs text-muted-foreground">Connected</span>
-                </div>
-              ) : (
-                <div className="flex items-center">
-                  <div className="w-2 h-2 rounded-full bg-red-500 mr-2"></div>
-                  <span className="text-xs text-muted-foreground">Disconnected</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container px-4 py-8">
-        <div className="flex flex-col gap-6">
-          {/* Error Alert */}
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-2">
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" size="default">
-                  <RotateCcw className="h-4 w-4 mr-2" />
+                <Button variant="outline" size="sm" className="mr-2">
+                  <RotateCcw className="h-4 w-4 mr-1" />
                   Reset
                 </Button>
               </AlertDialogTrigger>
@@ -229,33 +137,51 @@ export default function SettingsPage() {
               onClick={handleSaveSettings}
               className="google-gradient-border hover:bg-black"
               disabled={!hasChanges || loading}
+              size="sm"
             >
               {loading ? (
                 <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
                   Saving...
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Settings
+                  <Save className="h-4 w-4 mr-1" />
+                  Save
                 </>
               )}
             </Button>
           </div>
+        </div>
+      </header>
 
-          {/* Tabs */}
-          <div className="flex justify-center mb-6">
-            <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab} className="w-auto">
-              <TabsList className="bg-background/60 google-gradient-border inline-flex mx-auto">
-                <TabsTrigger value="general">Lineup</TabsTrigger>
-                <TabsTrigger value="engines">Quiver</TabsTrigger>
-                <TabsTrigger value="privacy">Low Pro</TabsTrigger>
-                <TabsTrigger value="appearance">Wax & Decals</TabsTrigger>
-                <TabsTrigger value="advanced">Fins & Leash</TabsTrigger>
-                <TabsTrigger value="personalSources">The Surf</TabsTrigger>
-              </TabsList>
+      {/* Main Content */}
+      <main className="container px-4 py-8">
+        <div className="flex flex-col gap-6">
+          {/* Error Alert */}
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
+          {/* Wrap Tabs in a width-constrained, centered div */}
+          <div className="max-w-5xl mx-auto">
+            <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab}>
+              {/* Center the TabsList within the constrained div */}
+              <div className="flex justify-center mb-6">
+                <TabsList className="bg-background/60 google-gradient-border inline-flex">
+                  <TabsTrigger value="general">Surf Lineup</TabsTrigger>
+                  <TabsTrigger value="engines">Board Quiver</TabsTrigger>
+                  <TabsTrigger value="privacy">Low Pro</TabsTrigger>
+                  <TabsTrigger value="appearance">Wax & Decals</TabsTrigger>
+                  <TabsTrigger value="advanced">Fins & Leash</TabsTrigger>
+                  <TabsTrigger value="personalSources">Local Lagoon</TabsTrigger>
+                </TabsList>
+              </div>
+
+              {/* TabsContent will now be constrained by the outer div */}
               <TabsContent value="general">
                 <GeneralSettings settings={settings.general} updateSetting={updateSetting} />
               </TabsContent>

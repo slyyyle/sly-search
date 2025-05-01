@@ -1,0 +1,143 @@
+\
+. - Project Root
+├── app/ - Next.js routing, pages, API endpoints
+│   ├── api/ - Backend API routes (proxied)
+│   │   ├── browse/ - API for browsing resources
+│   │   │   └── obsidian/ - API for browsing Obsidian vaults
+│   │   │       └── route.ts - Route handler for Obsidian browsing
+│   │   ├── check/ - API for checking resource status/validity
+│   │   │   └── obsidian/ - API for checking Obsidian vault path
+│   │   │       └── route.ts - Route handler for Obsidian check
+│   │   ├── health/ - API for health check
+│   │   │   └── route.ts - Route handler for health check
+│   │   ├── search/ - API for proxying search requests
+│   │   │   └── route.ts - Route handler for search proxy
+│   │   └── settings/ - API for managing settings
+│   │       └── route.ts - Route handler for settings GET/POST
+│   ├── info/ - Info/About page
+│   │   └── page.tsx - React component for Info page
+│   ├── search/ - Search results page
+│   │   ├── loading.tsx - Loading UI for search page
+│   │   └── page.tsx - React component for Search page
+│   ├── settings/ - Settings page
+│   │   └── page.tsx - React component for Settings page
+│   ├── globals.css - Global CSS styles
+│   ├── layout.tsx - Root layout component (Next.js)
+│   ├── loading.tsx - Root loading UI (Next.js)
+│   └── page.tsx - Root page component (likely redirect or home)
+├── components/ - Reusable React UI components
+│   ├── search-layouts/ - Components for different search result layouts
+│   │   ├── compact-results.tsx - Compact list view component
+│   │   ├── grid-results.tsx - Generic grid view component (unused?)
+│   │   ├── list-item.tsx - Component for a single list result item
+│   │   ├── list-results.tsx - Standard list view component
+│   │   ├── photo-card-item.tsx - Card component for a single photo result
+│   │   ├── photo-results.tsx - Grid view component for photo results
+│   │   ├── youtube-card-item.tsx - Card component for a single YouTube result
+│   │   └── youtube-grid-results.tsx - Grid view component for YouTube results
+│   ├── settings/ - Components for different settings sections
+│   │   ├── advanced-settings.tsx - Component for Advanced settings tab
+│   │   ├── appearance-settings.tsx - Component for Appearance settings tab
+│   │   ├── engines-settings.tsx - Component for Engines settings tab
+│   │   ├── general-settings.tsx - Component for General settings tab
+│   │   ├── personal-sources-settings.tsx - Component for Personal Sources settings tab
+│   │   └── privacy-settings.tsx - Component for Privacy settings tab
+│   ├── ui/ - Base UI elements (likely from shadcn/ui)
+│   │   ├── accordion.tsx - Accordion component
+│   │   ├── alert-dialog.tsx - Alert dialog component
+│   │   ├── alert.tsx - Alert message component
+│   │   ├── aspect-ratio.tsx - Aspect ratio container component
+│   │   ├── avatar.tsx - Avatar display component
+│   │   ├── badge.tsx - Badge component
+│   │   ├── breadcrumb.tsx - Breadcrumb navigation component
+│   │   ├── button.tsx - Button component
+│   │   ├── calendar.tsx - Calendar component
+│   │   ├── card.tsx - Card component
+│   │   ├── carousel.tsx - Carousel component
+│   │   ├── chart.tsx - Charting component
+│   │   ├── checkbox.tsx - Checkbox component
+│   │   ├── collapsible.tsx - Collapsible section component
+│   │   ├── command.tsx - Command palette component
+│   │   ├── context-menu.tsx - Context menu component
+│   │   ├── dialog.tsx - Dialog/modal component
+│   │   ├── drawer.tsx - Drawer component
+│   │   ├── dropdown-menu.tsx - Dropdown menu component
+│   │   ├── form.tsx - Form handling components (react-hook-form)
+│   │   ├── hover-card.tsx - Hover card component
+│   │   ├── input-otp.tsx - One-time password input component
+│   │   ├── input.tsx - Input field component
+│   │   ├── label.tsx - Label component
+│   │   ├── menubar.tsx - Menu bar component
+│   │   ├── navigation-menu.tsx - Navigation menu component
+│   │   ├── pagination.tsx - Pagination control component
+│   │   ├── popover.tsx - Popover component
+│   │   ├── progress.tsx - Progress bar component
+│   │   ├── radio-group.tsx - Radio button group component
+│   │   ├── resizable.tsx - Resizable panel component
+│   │   ├── scroll-area.tsx - Scrollable area component
+│   │   ├── select.tsx - Select dropdown component
+│   │   ├── separator.tsx - Separator line component
+│   │   ├── sheet.tsx - Sheet (slide-out panel) component
+│   │   ├── sidebar.tsx - Sidebar component (unused?)
+│   │   ├── skeleton.tsx - Skeleton loading state component
+│   │   ├── slider.tsx - Slider component
+│   │   ├── sonner.tsx - Toast notification component (Sonner)
+│   │   ├── switch.tsx - Switch toggle component
+│   │   ├── table.tsx - Table component
+│   │   ├── tabs.tsx - Tabs component
+│   │   ├── textarea.tsx - Textarea component
+│   │   ├── toast.tsx - Toast base component (shadcn)
+│   │   ├── toaster.tsx - Toaster container (shadcn)
+│   │   ├── toggle-group.tsx - Toggle button group component
+│   │   ├── toggle.tsx - Toggle button component
+│   │   ├── tooltip.tsx - Tooltip component
+│   │   ├── use-mobile.tsx - Hook to detect mobile viewport (duplicate?)
+│   │   └── use-toast.ts - Hook for showing toasts (shadcn)
+│   ├── info-dialog.tsx - Dialog component for showing info
+│   ├── knowledge-source-selector.tsx - Dropdown for selecting search source
+│   ├── loadout-manager.tsx - Component for managing loadouts (engines/sources)
+│   ├── loadout-selector.tsx - Dropdown for selecting loadouts
+│   ├── logo.tsx - Logo component
+│   ├── obsidian-vault-browser.tsx - Component for browsing Obsidian vault structure
+│   ├── quick-settings-menu.tsx - Dropdown menu for quick access settings
+│   ├── rag-mode-selector.tsx - Component for RAG settings (unused?)
+│   ├── search-results.tsx - Main component for displaying search results
+│   ├── settings-debug.tsx - Component for debug settings (unused?)
+│   ├── settings-tooltip.tsx - Tooltip specifically for settings labels
+│   ├── terminal-view.tsx - Component displaying terminal-like output (unused?)
+│   ├── the-surf-selector.tsx - Dropdown for selecting search source (duplicate?)
+│   └── theme-provider.tsx - Component for managing theme (dark/light)
+├── hooks/ - Custom React hooks
+│   ├── use-mobile.tsx - Hook to detect mobile viewport
+│   └── use-toast.ts - Hook for showing toasts (Sonner)
+├── lib/ - Utility functions, core logic, schemas
+│   ├── settings-schema.ts - Zod schema definition for application settings
+│   ├── use-settings.tsx - React context and hook for managing settings state
+│   └── utils.ts - General utility functions (e.g., cn for classnames)
+├── public/ - Static assets served directly
+│   ├── icons/ - Application icons
+│   │   └── s-gradient-icon.svg - SVG gradient icon
+│   ├── placeholder-logo.png - Placeholder logo image (PNG)
+│   ├── placeholder-logo.svg - Placeholder logo image (SVG)
+│   ├── placeholder-user.jpg - Placeholder user image
+│   ├── placeholder.jpg - Generic placeholder image
+│   └── placeholder.svg - Generic placeholder image (SVG)
+├── styles/ - Styling files
+│   └── globals.css - Global CSS styles (Tailwind base/custom)
+├── types/ - TypeScript type definitions
+│   ├── obsidian.ts - Types related to Obsidian vault items/API
+│   └── search.ts - Types related to search results/API responses
+├── .gitignore - Specifies intentionally untracked files for Git
+├── components.json - Configuration for shadcn/ui CLI
+├── filesystem_tree.txt - This file (directory structure)
+├── main_backend_proxy.PY - Main Python backend (FastAPI proxy)
+├── next-env.d.ts - Next.js TypeScript environment declarations
+├── next.config.mjs - Next.js configuration file
+├── package-lock.json - Exact dependency versions (npm)
+├── package.json - Project metadata and dependencies (npm)
+├── pnpm-lock.yaml - Exact dependency versions (pnpm)
+├── postcss.config.mjs - PostCSS configuration (Tailwind)
+├── README.md - Project documentation
+├── tailwind.config.ts - Tailwind CSS configuration
+├── tsconfig.json - TypeScript compiler configuration
+└── v0-user-next.config.mjs - Vercel v0 specific configuration 

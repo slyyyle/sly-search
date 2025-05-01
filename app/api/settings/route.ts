@@ -1,10 +1,10 @@
 // src/app/api/settings/route.ts (or similar path)
 
 import { type NextRequest, NextResponse } from "next/server";
+import { appSettingsSchema } from "@/lib/settings-schema";
 
-// Get the backend URL from environment variables
-// Ensure this is set in your .env.local or deployment environment
-const BACKEND_URL = process.env.FASTAPI_BACKEND_URL;
+// Use the standardized backend URL environment variable
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 // Helper function to handle fetch errors
 async function handleFetchError(response: Response, defaultMessage: string) {
@@ -23,7 +23,7 @@ async function handleFetchError(response: Response, defaultMessage: string) {
 // GET endpoint - Proxy to FastAPI GET /settings
 export async function GET(request: NextRequest) {
   if (!BACKEND_URL) {
-    console.error("FATAL: FASTAPI_BACKEND_URL environment variable not set.");
+    console.error("FATAL: NEXT_PUBLIC_BACKEND_URL environment variable not set.");
     return NextResponse.json({ error: "Backend service URL not configured" }, { status: 500 });
   }
 
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
 // POST endpoint - Proxy to FastAPI POST /settings
 export async function POST(request: NextRequest) {
   if (!BACKEND_URL) {
-    console.error("FATAL: FASTAPI_BACKEND_URL environment variable not set.");
+    console.error("FATAL: NEXT_PUBLIC_BACKEND_URL environment variable not set.");
     return NextResponse.json({ error: "Backend service URL not configured" }, { status: 500 });
   }
 

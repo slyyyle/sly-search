@@ -12,13 +12,20 @@ interface LoadoutSelectorProps {
 export function LoadoutSelector({ type, compact = false }: LoadoutSelectorProps) {
   const { settings, selectLoadout } = useSettings()
 
-  // Get the appropriate loadouts based on type
-  const section = type === "engines" ? settings.engines : settings.personalSources
-  const loadouts = section?.loadouts || []
-  const activeLoadoutId = section?.activeLoadout
+  let loadouts: any[] = [];
+  let activeLoadoutId: string | null = null;
 
-  // Find the active loadout
+  if (type === "engines") {
+    loadouts = settings.engines?.loadouts || [];
+    activeLoadoutId = settings.engines?.activeLoadoutId ?? null; 
+  } else if (type === "surf") {
+    loadouts = settings.personalSources?.loadouts || [];
+    activeLoadoutId = null; 
+  }
+
   const activeLoadout = loadouts.find((loadout) => loadout.id === activeLoadoutId)
+
+  const fallbackText = type === "engines" ? "Starter" : "Default Lagoon";
 
   return (
     <DropdownMenu>
@@ -29,7 +36,7 @@ export function LoadoutSelector({ type, compact = false }: LoadoutSelectorProps)
           className={`flex items-center justify-between ${compact ? "h-8 text-xs" : ""}`}
         >
           <span className="truncate mr-1">
-            {activeLoadout ? activeLoadout.name : `Default ${type === "engines" ? "Engines" : "Surf"}`}
+            {activeLoadout ? activeLoadout.name : fallbackText}
           </span>
           <ChevronDown className={compact ? "h-3 w-3" : "h-4 w-4"} />
         </Button>

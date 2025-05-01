@@ -7,7 +7,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { SettingsTooltip } from "@/components/settings-tooltip"
 import { Button } from "@/components/ui/button"
+import { List, LayoutGrid } from "lucide-react"
+import { Separator } from "@/components/ui/separator"
+import { useSettings } from "@/lib/use-settings"
 import type { AppSettings } from "@/lib/use-settings"
+import { cn } from "@/lib/utils"
+import { useState, useEffect } from "react"
+
+// Local interface definition provides component isolation
+interface WebSourceConfig {
+  resultsPerPage?: number;
+  defaultWebView?: 'list' | 'card';
+  resultsColumns?: number;
+  searchOnCategory?: boolean;
+  openNewTab?: boolean;
+}
 
 // Define props interface for better type checking
 interface GeneralSettingsProps {
@@ -16,19 +30,81 @@ interface GeneralSettingsProps {
 }
 
 export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProps) {
+  // Component accepts props but also uses hooks for flexibility
+  const { settings: fullSettings } = useSettings();
+  
   // Default settings within the component if the settings prop might be undefined
   const currentSettings = settings || {};
+  
+  // Access web settings from the personalSources section if available
+  const webSettings = fullSettings?.personalSources?.web || {
+    resultsPerPage: 10,
+    defaultWebView: 'list',
+    resultsColumns: 4,
+    openNewTab: true,
+    searchOnCategory: true
+  };
+
+  // Set default language to English
+  useEffect(() => {
+    if (!currentSettings.defaultLanguage) {
+      updateSetting("general", "defaultLanguage", "en");
+    }
+  }, [currentSettings.defaultLanguage, updateSetting]);
+
+  // Temporary input states for number fields
+  const [autocompleteMinInput, setAutocompleteMinInput] = useState<string>(String(currentSettings.autocompleteMin || "4"));
+  const [banTimeInput, setBanTimeInput] = useState<string>(String(currentSettings.banTime || "5"));
+  const [maxBanTimeInput, setMaxBanTimeInput] = useState<string>(String(currentSettings.maxBanTime || "120"));
+  const [resultsPerPageInput, setResultsPerPageInput] = useState<string>(String(currentSettings.resultsPerPage || "10"));
+  const [requestTimeoutInput, setRequestTimeoutInput] = useState<string>(String(currentSettings.requestTimeout || "5"));
+  const [maxRequestTimeoutInput, setMaxRequestTimeoutInput] = useState<string>(String(currentSettings.maxRequestTimeout || "10"));
+
+  // Update temporary states when props change
+  useEffect(() => {
+    setAutocompleteMinInput(String(currentSettings.autocompleteMin || "4"));
+    setBanTimeInput(String(currentSettings.banTime || "5"));
+    setMaxBanTimeInput(String(currentSettings.maxBanTime || "120"));
+    setResultsPerPageInput(String(currentSettings.resultsPerPage || "10"));
+    setRequestTimeoutInput(String(currentSettings.requestTimeout || "5"));
+    setMaxRequestTimeoutInput(String(currentSettings.maxRequestTimeout || "10"));
+  }, [currentSettings]);
+
+  // Function to update web settings
+  const updateWebSettings = (key: keyof WebSourceConfig, value: any) => {
+    const updatedSettings = {
+      ...webSettings,
+      [key]: value
+    };
+    updateSetting("personalSources", "web", updatedSettings);
+  };
 
   return (
-    <div className="space-y-6">
-      <Card>
+    <div className="space-y-6 w-full">
+      <Card className="w-full">
         <CardHeader>
-          <CardTitle>The Lineup</CardTitle>
+          <CardTitle>Web Surf Lineup</CardTitle>
           <CardDescription>Check the conditions & set your basic surf preferences</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-center">
+          {/* Backend URL - Moved from Base Setup */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="instance-url">Backend URL</Label>
+              <SettingsTooltip content="The base URL of your SearXNG instance. This setting is controlled at the system level." />
+            </div>
+            <Input
+              id="instance-url"
+              value={currentSettings.instanceUrl || "http://127.0.0.1:8000"}
+              onChange={(e) => updateSetting("general", "instanceUrl", e.target.value)}
+              disabled={true}
+              className="max-w-[200px] cursor-not-allowed opacity-70"
+            />
+          </div>
+
+          {/* Spot Name */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
               <Label htmlFor="instance-name">Spot Name</Label>
               <SettingsTooltip content="The name displayed in the header of your SearXNG instance. Default is 'SearXNG'." />
             </div>
@@ -36,52 +112,13 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
               id="instance-name"
               value={currentSettings.instanceName || "SlySearch"}
               onChange={(e) => updateSetting("general", "instanceName", e.target.value)}
+              className="max-w-[200px]"
             />
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="default-lang">Local Tongue</Label>
-              <SettingsTooltip content="Default search language. Set to 'auto' to detect from browser information or use specific language codes." />
-            </div>
-            <Select
-              value={currentSettings.defaultLanguage || "auto"}
-              onValueChange={(value) => updateSetting("general", "defaultLanguage", value)}
-            >
-              <SelectTrigger id="default-lang">
-                <SelectValue placeholder="Select language" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="auto">Auto Detect</SelectItem>
-                <SelectItem value="en">English</SelectItem>
-                <SelectItem value="fr">French</SelectItem>
-                <SelectItem value="de">German</SelectItem>
-                <SelectItem value="es">Spanish</SelectItem>
-                <SelectItem value="it">Italian</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Local Tongue - Removed and defaulted to English */}
 
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="safe-search">Safe Search</Label>
-              <SettingsTooltip content="Filter results: 0: None, 1: Moderate, 2: Strict" />
-            </div>
-            <Select
-              value={String(currentSettings.safeSearch ?? "0")}
-              onValueChange={(value) => updateSetting("general", "safeSearch", value)}
-            >
-              <SelectTrigger id="safe-search">
-                <SelectValue placeholder="Select safe search level" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0">Off</SelectItem>
-                <SelectItem value="1">Moderate</SelectItem>
-                <SelectItem value="2">Strict</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
+          {/* Autocomplete */}
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center">
@@ -90,6 +127,7 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
               </div>
               <div className="text-sm text-muted-foreground">Get wave tips while paddling out</div>
             </div>
+            {/* INFERRED: !== false: Feature should be ON by default if undefined (opt-out) */}
             <Switch
               id="autocomplete"
               checked={currentSettings.autocomplete !== false}
@@ -97,70 +135,9 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
             />
           </div>
 
+          {/* Favicon Resolver */}
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <div className="flex items-center">
-                <Label htmlFor="engines-loadout">Engines</Label>
-                <SettingsTooltip content="Select which engine loadout to use for searches." />
-              </div>
-              <div className="text-sm text-muted-foreground">Choose your search engine configuration</div>
-            </div>
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-              <span className="flex items-center">
-                <span className="mr-1">🚀</span>
-                Default
-              </span>
-            </Button>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <div className="flex items-center">
-                <Label htmlFor="waves-surfboard">Surf</Label>
-                <SettingsTooltip content="Configure the default behavior for Surf." />
-              </div>
-              <div className="text-sm text-muted-foreground">Set default behavior for Surf</div>
-            </div>
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-              <span className="flex items-center">
-                <span className="mr-1">🏄</span>
-                Default
-              </span>
-            </Button>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <div className="flex items-center">
-                <Label htmlFor="rag-enabled">AI Spotter</Label>
-                <SettingsTooltip content="Enable Retrieval-Augmented Generation for enhanced search results." />
-              </div>
-              <div className="text-sm text-muted-foreground">Use AI to scope the conditions</div>
-            </div>
-            <Switch
-              id="rag-enabled"
-              checked={currentSettings.ragEnabled === true}
-              onCheckedChange={(checked) => updateSetting("general", "ragEnabled", checked)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="autocomplete-min">Autocomplete Minimum Characters</Label>
-              <SettingsTooltip content="Minimum characters to type before autocompleter starts suggesting terms." />
-            </div>
-            <Input
-              id="autocomplete-min"
-              type="number"
-              value={currentSettings.autocompleteMin || "4"}
-              min="1"
-              max="10"
-              onChange={(e) => updateSetting("general", "autocompleteMin", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center">
+            <div className="flex items-center space-x-2">
               <Label htmlFor="favicon-resolver">Favicon Resolver</Label>
               <SettingsTooltip content="Backend for the favicon near URL in search results. Available resolvers: allesedv, duckduckgo, google, yandex." />
             </div>
@@ -168,7 +145,7 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
               value={currentSettings.faviconResolver || "off"}
               onValueChange={(value) => updateSetting("general", "faviconResolver", value)}
             >
-              <SelectTrigger id="favicon-resolver">
+              <SelectTrigger id="favicon-resolver" className="max-w-[200px]">
                 <SelectValue placeholder="Select favicon resolver" />
               </SelectTrigger>
               <SelectContent>
@@ -181,86 +158,164 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="ban-time">Wipeout Cooldown (sec)</Label>
+          {/* Wipeout Rest Break */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="ban-time">Wipeout Rest Break (sec)</Label>
               <SettingsTooltip content="Ban time in seconds after engine errors. Engines that fail will be temporarily disabled." />
             </div>
             <Input
               id="ban-time"
-              type="number"
-              value={currentSettings.banTime || "5"}
+              type="text"
+              inputMode="numeric"
+              value={banTimeInput}
+              onChange={(e) => setBanTimeInput(e.target.value)}
+              onBlur={() => {
+                const value = parseInt(banTimeInput);
+                if (!isNaN(value) && value >= 0 && value <= 600) {
+                  updateSetting("general", "banTime", String(value));
+                } else {
+                  setBanTimeInput(String(currentSettings.banTime || "5"));
+                }
+              }}
               min="0"
               max="600"
-              onChange={(e) => updateSetting("general", "banTime", e.target.value)}
+              className="max-w-[200px]"
             />
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="max-ban-time">Max Wipeout Cooldown (sec)</Label>
+          {/* Max Wipeout Rest Break */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="max-ban-time">Max Wipeout Rest Break (sec)</Label>
               <SettingsTooltip content="Maximum ban time in seconds after engine errors." />
             </div>
             <Input
               id="max-ban-time"
-              type="number"
-              value={currentSettings.maxBanTime || "120"}
+              type="text"
+              inputMode="numeric"
+              value={maxBanTimeInput}
+              onChange={(e) => setMaxBanTimeInput(e.target.value)}
+              onBlur={() => {
+                const value = parseInt(maxBanTimeInput);
+                if (!isNaN(value) && value >= 0 && value <= 86400) {
+                  updateSetting("general", "maxBanTime", String(value));
+                } else {
+                  setMaxBanTimeInput(String(currentSettings.maxBanTime || "120"));
+                }
+              }}
               min="0"
               max="86400"
-              onChange={(e) => updateSetting("general", "maxBanTime", e.target.value)}
+              className="max-w-[200px]"
             />
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Ride Style</CardTitle>
-          <CardDescription>How you want your search results to flow</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+          
+          {/* Paddle Out Timeout - Moved up near Wipeout Rest Break */}
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <div className="flex items-center">
-                <Label htmlFor="open-new-tab">Open Links in New Window</Label>
-                <SettingsTooltip content="When enabled, search result links will open in a new browser tab." />
-              </div>
-              <div className="text-sm text-muted-foreground">Pop open links in a fresh window</div>
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="request-timeout">Paddle Out Timeout (sec)</Label>
+              <SettingsTooltip content="Default timeout in seconds for requests to search engines. Can be overridden by individual engines." />
             </div>
-            <Switch
-              id="open-new-tab"
-              checked={currentSettings.openNewTab !== false}
-              onCheckedChange={(checked) => updateSetting("general", "openNewTab", checked)}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <div className="flex items-center">
-                <Label htmlFor="infinite-scroll">Endless Summer Scroll</Label>
-                <SettingsTooltip content="When enabled, automatically loads the next page when scrolling to bottom of the current page." />
-              </div>
-              <div className="text-sm text-muted-foreground">Keep the results rolling in</div>
-            </div>
-            <Switch
-              id="infinite-scroll"
-              checked={currentSettings.infiniteScroll !== false}
-              onCheckedChange={(checked) => updateSetting("general", "infiniteScroll", checked)}
+            <Input
+              id="request-timeout"
+              type="text"
+              inputMode="numeric"
+              value={requestTimeoutInput}
+              onChange={(e) => setRequestTimeoutInput(e.target.value)}
+              onBlur={() => {
+                const value = parseInt(requestTimeoutInput);
+                if (!isNaN(value) && value >= 1 && value <= 30) {
+                  updateSetting("general", "requestTimeout", String(value));
+                } else {
+                  setRequestTimeoutInput(String(currentSettings.requestTimeout || "5"));
+                }
+              }}
+              min="1"
+              max="30"
+              className="max-w-[200px]"
             />
           </div>
 
+          {/* Max Paddle Out Timeout - Moved up near Wipeout Rest Break */}
           <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="max-request-timeout">Max Paddle Out Timeout (sec)</Label>
+              <SettingsTooltip content="The maximum timeout in seconds for any search engine request." />
+            </div>
+            <Input
+              id="max-request-timeout"
+              type="text"
+              inputMode="numeric"
+              value={maxRequestTimeoutInput}
+              onChange={(e) => setMaxRequestTimeoutInput(e.target.value)}
+              onBlur={() => {
+                const value = parseInt(maxRequestTimeoutInput);
+                if (!isNaN(value) && value >= 1 && value <= 60) {
+                  updateSetting("general", "maxRequestTimeout", String(value));
+                } else {
+                  setMaxRequestTimeoutInput(String(currentSettings.maxRequestTimeout || "10"));
+                }
+              }}
+              min="1"
+              max="60"
+              className="max-w-[200px]"
+            />
+          </div>
+
+          {/* Web Search Settings from Personal Sources */}
+          <Separator className="my-4" />
+          <h3 className="text-lg font-medium">Web Search Settings</h3>
+
+          {/* Results Per Page */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="results-per-page">Web Results Per Page</Label>
+              <SettingsTooltip content="How many web results to show per page (Applies globally to web searches)." />
+            </div>
+            <Input
+              id="results-per-page"
+              type="text"
+              inputMode="numeric"
+              value={resultsPerPageInput}
+              onChange={(e) => setResultsPerPageInput(e.target.value)}
+              onBlur={() => {
+                const value = parseInt(resultsPerPageInput);
+                if (!isNaN(value) && value >= 1 && value <= 100) {
+                  updateSetting('general', 'resultsPerPage', String(value));
+                } else {
+                  setResultsPerPageInput(String(currentSettings.resultsPerPage || "10"));
+                }
+              }}
+              min="1"
+              max="100"
+              className="max-w-[200px]"
+            />
+          </div>
+
+          {/* Open Links in New Tab Switch */}
+          <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
             <div className="space-y-0.5">
-              <div className="flex items-center">
-                <Label htmlFor="search-on-category">Search When Switching Breaks</Label>
-                <SettingsTooltip content="When enabled, automatically runs a new search when you switch categories (e.g., Images, Videos)." />
+              <Label>Open Links in New Tab</Label>
+              <div className="text-sm text-muted-foreground">Control link behavior for web search.</div>
+            </div>
+            {/* INFERRED: !== false: Feature should be ON by default if undefined (opt-out) */}
+            <Switch
+              checked={webSettings?.openNewTab !== false}
+              onCheckedChange={(checked) => updateWebSettings('openNewTab', checked)}
+            />
+          </div>
+          
+          {/* Search on Category Change Switch */}
+          <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+            <div className="space-y-0.5">
+              <Label>Search When Filters Change</Label>
+              <div className="text-sm text-muted-foreground">
+                Automatically trigger a new search when category filters are toggled.
               </div>
-              <div className="text-sm text-muted-foreground">Auto-search when you switch breaks (Images, Videos...)</div>
             </div>
             <Switch
-              id="search-on-category"
-              checked={currentSettings.searchOnCategory !== false}
-              onCheckedChange={(checked) => updateSetting("general", "searchOnCategory", checked)}
+              checked={webSettings?.searchOnCategory === true}
+              onCheckedChange={(checked) => updateWebSettings('searchOnCategory', checked)}
             />
           </div>
         </CardContent>

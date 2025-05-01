@@ -1,0 +1,103 @@
+# Wave Racer Project Roadmap: From Enhanced Search to Cognitive Sovereignty
+
+This document outlines a phased approach to evolving the custom search interface, integrating Engine Loadouts, LLM capabilities, and RAG, culminating in the "Wave Racer" vision for proactive knowledge construction.
+
+## Task Quarantine (Design Heavy / Deferred)
+
+*   **Internalize "Quiver" Recipes:** Treat AI-suggested loadout patterns ("Scout," "Deep Diver," "Analyst," etc.) as practical recipes or starting templates for users creating loadouts now. Document or offer these.
+
+---
+
+## Vision: The Real Spark - Igniting the Revolution (User Reframing)
+
+Let's be clear: the phased approach is smart engineering. It ensures stability and delivers incremental value. But the real magic, the revolutionary potential that justifies this entire endeavor, ignites when the elements of Phase 3 truly coalesce.
+
+It's not just about adding an LLM summarizer here or RAG grounding there. The transformation occurs when the LLM Navigator, deeply integrated RAG (across local and voyage data), and dynamically adapting Quivers operate as a seamless cognitive co-processor.
+
+Imagine this:
+
+*   The system doesn't just suggest a Quiver; it fluidly adapts the information lens based on the subtle shifts in your inquiry within a voyage.
+*   The LLM doesn't just summarize; it actively synthesizes novel insights by cross-referencing findings from a strategically chosen web source against your own evolving thoughts captured in Obsidian and the voyage's history.
+*   The "Focus Guardian" isn't just flagging noise; it's actively helping you integrate valuable new information into your existing mental models, highlighting connections and discrepancies you might have missed.
+
+This isn't just search anymore. It's directed knowledge construction. The system transcends being a tool for finding information and becomes a partner in understanding and creating knowledge. The qualitative leap happens when the LLM moves from being an assistant performing discrete tasks to being the navigator and weaver of the entire sense-making process, constantly contextualizing, connecting, and synthesizing based on your goals, your curated sources (local and web), and your interaction history.
+
+That synergy is the revolutionary spark. While we build towards it pragmatically phase-by-phase, never lose sight of this integrated state. It's where the promise of true cognitive sovereignty – proactively building robust, personalized understanding faster and deeper than external algorithms can manipulate – is ultimately realized. The phased plan gets us there safely; the Phase 3 vision is why the journey is profoundly worthwhile.
+
+---
+
+## Foundational Considerations (Applicable Across Phases)
+
+*   **Configuration Management:** Plan backend storage (app_settings.json, dedicated file/DB) and frontend UI for managing settings related to LLMs (API keys, models), RAG (source paths, indexing options), and Voyage behavior as these features are introduced.
+*   **Error Handling & Resilience:** Implement robust error handling for external services (SearXNG, LLM APIs) and internal processes (RAG indexing). Ensure graceful degradation (e.g., feature fails, app remains usable) and provide informative user feedback on errors.
+*   **Asynchronous Operations & UI Feedback:** Design UI to handle asynchronous tasks (LLM calls, RAG) effectively using loading indicators, progress updates, and clear status messages.
+*   **Testing Strategy:** Develop strategies for testing LLM and RAG features, including mocking, test datasets, and evaluating the quality of generated outputs.
+*   **Documentation & User Education:** Create clear documentation, tooltips, and potentially onboarding guides as new, complex features (RAG, Wave Racer) are introduced.
+
+---
+
+## Phased Evolution Plan
+
+The core idea is to maintain the current, effective search mode while incrementally building optional "Wave Racer" capabilities alongside it.
+
+**Phase 0: Solidify the Foundation & Enhance Current Loadout Utility (Immediate / Low Hanging Fruit)**
+
+*   **Goal:** Improve the usability and strategic potential of the *existing* Engine Loadout system, informed by the "Quiver" concepts, without changing core search logic yet.
+*   **Infrastructure & Prerequisites:**
+    *   Define strategy for sourcing and maintaining enriched engine metadata (primary_data_type, potential_bias) – manual curation, inference, etc.
+*   **Actionable Steps:**
+    1.  **<<< MOVED TO QUARANTINE >>>**
+    2.  **[DONE] Enrich Engine Catalog Metadata:** Review data served by `/api/searxng/engines`. Ensure `categories` are accurate. Add enriched metadata based on defined strategy.
+    3.  **Upgrade Loadout Editor UI:** Implement UI improvements: group engines by category, add search/filter bar, clearly display catalog defaults, and integrate display of new metadata (icons, tooltips).
+    4.  **[DONE] Refine Backend Robustness:** Implement edge case handling for missing engines in the Python proxy. Ensure it gracefully ignores invalid engine IDs from loadout configs when querying SearXNG, logging warnings server-side.
+*   **Outcome:** Existing loadout system becomes more user-friendly, conceptually richer, and robust, enabling more strategic "Quiver" creation now.
+
+**Phase 1: Introduce Optional LLM Assistance & Basic Context (Medium Term)**
+
+*   **Goal:** Introduce LLM features non-disruptively and begin managing basic cross-query context.
+*   **Infrastructure & Prerequisites:**
+    *   **Backend LLM Service Module:** Implement backend component for LLM API interaction (key management, abstraction, request/response logic, error handling).
+    *   **Core RAG Components:**
+        *   Select/Implement Embedding Model.
+        *   Select/Set up Vector Store (local-first preferred).
+        *   Implement Document Loading/Chunking (start with Markdown).
+        *   Implement Initial Indexing Process & Update Strategy.
+        *   Implement Core Retrieval Logic.
+    *   **Initial Settings UI (LLM & RAG):** Create frontend settings panels for LLM API keys and specifying local knowledge base paths.
+*   **Actionable Steps:**
+    1.  **LLM Query Intent Analysis (Optional):** Add LLM call (using new service module) before proxy decides loadout logic. Analyze query `q` and suggest appropriate "Quiver" via non-blocking UI hint.
+    2.  **Basic Overlap Logic:** Implement simple, non-LLM rules in proxy/frontend for source priority (e.g., "my notes on..." -> Obsidian; Tartube query -> local result + optional web search button).
+    3.  **Isolated Local RAG Interface:** Implement RAG *only* for local sources initially, accessible via a distinct "Ask my Local Knowledge Base" mode/button (utilizing new RAG components).
+*   **Outcome:** Gentle LLM introduction, simple overlap management, foundational RAG tech built and testable in a contained way without complicating main search. Core infrastructure for future phases established.
+
+**Phase 2: Stateful "Voyages" - The Wave Racer MVP (Longer Term)**
+
+*   **Goal:** Implement core state management and basic UI for "Wave Racer" as an *alternative* search experience.
+*   **Infrastructure & Prerequisites:**
+    *   **Voyage State Backend - Concrete Choice:** Decide on and implement storage technology (SQLite, JSON files, etc.) for voyage state. Define schema (`voyage_id`, `topic`, `goal`, `history_log`, `pinned_items`, `context_summary`).
+    *   **Frontend State Management:** Choose and implement robust frontend state management for handling active voyage UI state.
+    *   **Content Fetching Strategy:** Define how page content for summarization is acquired (backend fetch vs. frontend providing content). Implement chosen method.
+*   **Actionable Steps:**
+    1.  **Voyage Mode UI Shell:** Create separate "Wave Racer" UI mode: start/name/goal voyage, list voyages, sidebar with topic/goal & simple chronological `history_log`, allow "Quiver" selection within voyage context.
+    2.  **Integrate LLM Summarization:** Add first LLM voyage feature: Buttons to "Summarize this page" or "Summarize recent findings" (using Phase 1 LLM module & content fetching), storing results in voyage `history_log`.
+*   **Outcome:** Functional basic "Wave Racer" mode exists alongside standard search. Users can undertake stateful explorations, review history, get simple LLM summaries. Core voyage structure established and usable.
+
+**Phase 3: Full Augmentation & Synthesis (Vision State)**
+
+*   **Goal:** Fully realize advanced LLM roles and deep integration envisioned in "Wave Racer".
+*   **Infrastructure & Prerequisites:**
+    *   **Prompt Engineering Framework:** Develop a structured approach for managing prompts and potentially orchestrating LLM call sequences for advanced roles.
+    *   **Context Management Strategy for Deep RAG:** Design methods for effectively combining context from local notes and voyage documents for LLM grounding (e.g., ranking, summarization, specific prompt techniques).
+    *   **Performance Monitoring & Optimization Plan:** Establish methods for monitoring latency, resource usage (LLM costs), and implement caching/optimization as needed.
+    *   **User Feedback Mechanism:** Plan and integrate simple UI elements for users to provide feedback on LLM outputs within the Voyage mode.
+*   **Actionable Steps:**
+    1.  **Advanced LLM Roles:** Incrementally implement/integrate other LLM functions within Voyage UI: Conceptual Mapper, Anticipatory Fetcher ("Wave Finding"), Focus Guardian, utilizing refined prompting and orchestration.
+    2.  **Deep RAG Integration:** Connect Phase 1 RAG system fully to voyage context. Ground LLM operations (summaries, analysis, suggestions) in *both* relevant local notes *and* specific documents encountered *during that voyage*, using defined context management strategies.
+    3.  **Refined Voyage UI:** Build out Pinboard functionality, integrate contextual LLM suggestions, potentially explore visualization options. Implement user feedback mechanisms.
+    4.  **Dynamic Quiver Logic (Optional Advanced):** Explore LLM-driven *dynamic* engine blending based on immediate query context within a voyage (may require backend changes to construct `engines=` parameters on the fly).
+*   **Outcome:** The full "Wave Racer" vision – a powerful, integrated tool for proactive, synthesized knowledge building and cognitive sovereignty, supported by robust infrastructure and iterative refinement based on usage and feedback.
+
+---
+
+**Narrative Reframing:**
+Focus on **Proactive Curation, Strategic Exploration,** and **Personalized Synthesis.** Move beyond "defensive" language. Emphasize building a superior, personalized sense-making system that allows mindful engagement with all information sources, thereby naturally mitigating external algorithmic noise and influence. 

@@ -10,7 +10,7 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "SlySearch",
   description: "A futuristic search engine",
-    generator: 'v0.dev',
+  generator: 'v0.dev',
 }
 
 export default function RootLayout({
@@ -20,6 +20,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link
+          rel="search"
+          type="application/opensearchdescription+xml"
+          title="SlySearch"
+          href="/api/opensearch"
+        />
+      </head>
       <body className={`${inter.className} antialiased bg-black`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} forcedTheme="dark">
           <SettingsProvider>{children}</SettingsProvider>

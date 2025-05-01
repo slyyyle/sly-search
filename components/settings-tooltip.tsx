@@ -4,7 +4,7 @@ import { useState } from "react"
 import { HelpCircle } from "lucide-react"
 
 interface SettingsTooltipProps {
-  content: string
+  content: React.ReactNode
 }
 
 export function SettingsTooltip({ content }: SettingsTooltipProps) {
@@ -22,7 +22,7 @@ export function SettingsTooltip({ content }: SettingsTooltipProps) {
       </button>
 
       {isVisible && (
-        <div className="absolute z-50 left-6 top-0 w-64 p-2 text-xs bg-gray-800 border border-gray-700 rounded-md text-gray-200 shadow-lg">
+        <div className="absolute z-50 left-6 top-0 w-64 p-2 text-[11px] bg-gray-800 border border-gray-700 rounded-md text-gray-200 shadow-lg">
           {content}
         </div>
       )}
