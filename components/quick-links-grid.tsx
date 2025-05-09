@@ -113,10 +113,10 @@ const QuickLinksGrid: React.FC = () => {
             <button
               onClick={() => setActiveCategory('Quick')}
               className={cn(
-                'px-4 py-2 text-sm transition-all duration-200 flex-1',
+                'px-4 py-2 text-sm transition-all duration-200 flex-1 border-b-2',
                 activeCategory === 'Quick'
-                  ? 'bg-primary/10 text-primary font-medium border-b-2 border-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  ? 'bg-primary/10 text-primary font-medium border-primary'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border-transparent'
               )}
             >
               Quick
@@ -126,10 +126,10 @@ const QuickLinksGrid: React.FC = () => {
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
                 className={cn(
-                  'px-4 py-2 text-sm transition-all duration-200 flex-1',
+                  'px-4 py-2 text-sm transition-all duration-200 flex-1 border-b-2',
                   activeCategory === cat
-                    ? 'bg-primary/10 text-primary font-medium border-b-2 border-primary'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                    ? 'bg-primary/10 text-primary font-medium border-primary'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border-transparent'
                 )}
               >
                 {cat}
@@ -137,7 +137,7 @@ const QuickLinksGrid: React.FC = () => {
             ))}
           </div>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4 min-h-[6rem]">
           {filteredQuickLinks.map(link => (
             <ContextMenu key={link.id}>
               <ContextMenuTrigger>
@@ -191,4 +191,4 @@ const QuickLinksGrid: React.FC = () => {
   );
 };
 
-export default QuickLinksGrid; 
+export default React.memo(QuickLinksGrid); 

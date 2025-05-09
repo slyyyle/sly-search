@@ -245,6 +245,10 @@
     --gradient-color-4: var(--quantum-swell-c4-rgb);
     --slider-thumb-border-color: var(--quantum-swell-c2-rgb);
   }
+
+  html {
+    overflow-y: scroll; /* Always show scrollbar */
+  }
 }
 
 @layer base {
@@ -253,6 +257,7 @@
   }
   body {
     @apply bg-black text-foreground;
+    font-family: var(--font-hack), monospace; /* Added Hack font */
   }
 }
 

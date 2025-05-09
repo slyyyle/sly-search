@@ -40,8 +40,8 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
           <CardDescription>Fine-tune connection pool & HTTP settings</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-center">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
               <Label htmlFor="pool-connections">Max Concurrent Connections</Label>
               <SettingsTooltip content="The maximum number of concurrent connections that may be established." />
             </div>
@@ -52,11 +52,12 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
               min="10"
               max="500"
               onChange={(e) => updateSetting("advanced", "poolConnections", e.target.value)}
+              className="max-w-[120px]"
             />
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
               <Label htmlFor="pool-maxsize">Keep-Alive Connection Limit</Label>
               <SettingsTooltip content="Allow the connection pool to maintain keep-alive connections below this point." />
             </div>
@@ -67,6 +68,7 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
               min="5"
               max="100"
               onChange={(e) => updateSetting("advanced", "poolMaxsize", e.target.value)}
+              className="max-w-[120px]"
             />
           </div>
 
@@ -123,9 +125,9 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
             />
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="redis-url">Redis URL (optional)</Label>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2 mr-4">
+              <Label htmlFor="redis-url">Redis URL</Label>
               <SettingsTooltip content="URL to connect to Redis database. Used for caching and rate limiting." />
             </div>
             <Input
@@ -134,6 +136,7 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
               value={currentSettings.redisUrl || ""}
               onChange={(e) => updateSetting("advanced", "redisUrl", e.target.value)}
               disabled={true}
+              className="flex-grow cursor-not-allowed opacity-70 text-right"
             />
           </div>
         </CardContent>

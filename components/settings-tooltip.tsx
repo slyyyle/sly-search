@@ -5,9 +5,10 @@ import { HelpCircle } from "lucide-react"
 
 interface SettingsTooltipProps {
   content: React.ReactNode
+  additionalContent?: React.ReactNode
 }
 
-export function SettingsTooltip({ content }: SettingsTooltipProps) {
+export function SettingsTooltip({ content, additionalContent }: SettingsTooltipProps) {
   const [isVisible, setIsVisible] = useState(false)
 
   return (
@@ -24,6 +25,7 @@ export function SettingsTooltip({ content }: SettingsTooltipProps) {
       {isVisible && (
         <div className="absolute z-50 left-6 top-0 w-64 p-2 text-[11px] bg-gray-800 border border-gray-700 rounded-md text-gray-200 shadow-lg">
           {content}
+          {additionalContent && <span className="ml-1">{additionalContent}</span>}
         </div>
       )}
     </div>

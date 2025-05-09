@@ -179,7 +179,7 @@ export default function Home() {
          </div>
  
          {isInitialLoadComplete && (
-           <div> 
+           <div style={{ minHeight: '300px' }}>
              <QuickLinksGrid />
             </div>
          )}

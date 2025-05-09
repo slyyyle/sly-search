@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Plus, Trash2, Edit2, Image, Link2, Globe } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog"
 import { ThemeSwitcher } from "@/components/theme-switcher"
+import { FontSwitcher } from "@/components/font-switcher"
 
 interface AppearanceSettingsProps {
   settings: AppSettings['appearance']
@@ -214,6 +215,23 @@ export function AppearanceSettings({ settings, updateSetting }: AppearanceSettin
               <ThemeSwitcher 
                 value={currentSettings.theme || 'google-original'} 
                 onThemeChange={(themeId) => updateSetting("appearance", "theme", themeId)}
+              />
+            </div>
+          </div>
+
+          {/* Font Style - New Section */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Label>Font Style</Label>
+              <SettingsTooltip 
+                content="Select the application-wide font."
+                additionalContent="(More fonts coming soon.)"
+              />
+            </div>
+            <div className="max-w-[200px] w-full">
+              <FontSwitcher 
+                value={currentSettings.font || 'hack-local'} 
+                onFontChange={(fontId) => updateSetting("appearance", "font", fontId)}
               />
             </div>
           </div>

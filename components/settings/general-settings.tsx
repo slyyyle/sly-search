@@ -89,8 +89,8 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
         <CardContent className="space-y-4">
           {/* Backend URL - Moved from Base Setup */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="instance-url">Backend URL</Label>
+            <div className="flex items-center space-x-2 mr-4">
+              <Label htmlFor="instance-url" className="whitespace-nowrap">Backend URL</Label>
               <SettingsTooltip content="The base URL of your SearXNG instance. This setting is controlled at the system level." />
             </div>
             <Input
@@ -98,7 +98,7 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
               value={currentSettings.instanceUrl || "http://127.0.0.1:8000"}
               onChange={(e) => updateSetting("general", "instanceUrl", e.target.value)}
               disabled={true}
-              className="max-w-[200px] cursor-not-allowed opacity-70"
+              className="flex-grow cursor-not-allowed opacity-70 text-right"
             />
           </div>
 

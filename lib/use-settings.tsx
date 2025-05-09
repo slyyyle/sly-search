@@ -133,6 +133,7 @@ const defaultSettings: AppSettings = {
   appearance: {
     resultsLayout: "list",
     theme: "google-original",
+    font: "hack-local",
     centerAlignment: false,
     defaultLocale: "auto",
     hotkeys: "default",
@@ -357,6 +358,20 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         }
       } else {
         console.log("[THEME DEBUG USE_SETTINGS] No theme found in finalSettings.appearance, default will apply from ThemeSwitcher or CSS.");
+      }
+
+      // ----> STORE FONT PREFERENCE FROM LOADED SETTINGS <----
+      if (finalSettings.appearance?.font) {
+        console.log("[FONT DEBUG USE_SETTINGS] Storing initial font from loaded settings:", finalSettings.appearance.font);
+        try {
+          localStorage.setItem('selected-font', finalSettings.appearance.font);
+          // If we wanted to also set a data-font attribute for other uses:
+          // document.documentElement.dataset.font = finalSettings.appearance.font;
+        } catch (e) {
+          console.warn('Failed to set initial font in localStorage from useSettings', e);
+        }
+      } else {
+        console.log("[FONT DEBUG USE_SETTINGS] No font found in finalSettings.appearance.");
       }
 
       // Finalize loading state

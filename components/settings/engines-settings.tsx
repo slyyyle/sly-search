@@ -66,7 +66,7 @@ export function EnginesSettings({ }: EnginesSettingsProps) {
   } = useSettings()
 
   // State for the Add Engine category filter
-  const [addEngineSelectedCategory, setAddEngineSelectedCategory] = useState<string | null>(null);
+  const [addEngineSelectedCategory, setAddEngineSelectedCategory] = useState<string | null>("general");
 
   // State for AlertDialog
   const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
@@ -344,8 +344,8 @@ export function EnginesSettings({ }: EnginesSettingsProps) {
 
   // Get the name of the active loadout for display
   const activeLoadoutName = useMemo(() => {
-     // ADD CONSOLE LOG HERE
      console.log("[EnginesSettings activeLoadoutName] activeEngineLoadoutId:", activeEngineLoadoutId);
+     if (activeEngineLoadoutId === 'sl-ai') return 'SL-AI';
      if (activeEngineLoadoutId === 'starter') return 'Starter';
      return settings.engines?.loadouts?.find(l => l.id === activeEngineLoadoutId)?.name || 'Unknown';
   }, [activeEngineLoadoutId, settings.engines?.loadouts]);
@@ -502,7 +502,7 @@ export function EnginesSettings({ }: EnginesSettingsProps) {
     };
     const aiLoadout: EngineLoadout = {
       id: 'sl-ai',
-      name: 'AI Dynamic Search',
+      name: 'SL-AI',
       config: [], // Config is dynamically determined
       isLocked: true
     };
@@ -569,161 +569,149 @@ export function EnginesSettings({ }: EnginesSettingsProps) {
 
              {/* Config UI Area */}
              <div className="p-4 space-y-4">
-                {/* Show locked message ONLY if Starter is active */}
-                {isStarterActive ? (
+                {/* Check for AI Loadout First */}
+                {activeEngineLoadoutId === 'sl-ai' ? (
+                  <div className="text-center text-muted-foreground text-sm py-4 border rounded-md bg-muted/50">
+                     <p>No need to select engines, the AI will do that for you!</p>
+                  </div>
+                ) : isStarterActive ? (
                   // Show this message when Starter is active
                   <div className="text-center text-muted-foreground text-sm py-4 border rounded-md bg-muted/50">
                      <p>This profile is locked, create a loadout to begin!</p>
                   </div>
                 ) : (
-                  // Show Add Engine UI for any other active loadout
-                  <div className="mt-4 space-y-2">
-                    <Label htmlFor="category-filter-select">Add Engine</Label>
-                    {/* Category Filter Dropdown - Made full width */}
-                    <Select 
-                      value={addEngineSelectedCategory || "all"}
-                      onValueChange={(value) => setAddEngineSelectedCategory(value === "all" ? null : value)}
-                    >
-                      <SelectTrigger id="category-filter-select" className="w-full"> {/* Added w-full */}
-                        <SelectValue placeholder="Filter by Category..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {categoryOrder.map((cat: { id: string; name: string }) => (
-                          <SelectItem key={cat.id} value={cat.id} className="capitalize">
-                            {cat.id} {/* Display cat.id instead of cat.name and add capitalize */}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  // Show Add Engine UI and Enabled Engines list for other active loadouts
+                  <>
+                    <div className="mt-4 space-y-2">
+                      <Label htmlFor="category-filter-select">Add Engine</Label>
+                      {/* Category Filter Dropdown - Made full width */}
+                      <Select 
+                        value={addEngineSelectedCategory || "all"}
+                        onValueChange={(value) => setAddEngineSelectedCategory(value === "all" ? null : value)}
+                      >
+                        <SelectTrigger id="category-filter-select" className="w-full">
+                          <SelectValue placeholder="Filter by Category..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Categories</SelectItem>
+                          {categoryOrder.map((cat: { id: string; name: string }) => (
+                            <SelectItem key={cat.id} value={cat.id} className="capitalize">
+                              {cat.id}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
 
-                    {/* NEW: Scrollable Engine List */}
-                    <ScrollArea className="h-96 w-full rounded-md border p-2 mt-2"> 
-                      <div className="space-y-1">
-                        {addableEngines
-                          .filter(engine => 
-                            // If no category selected, show all.
-                            !addEngineSelectedCategory || 
-                            // Otherwise, check if *any* of the engine's raw categories (lowercased) directly match the selected category string.
-                            (engine.categories || []).some(rawCat => rawCat.toLowerCase() === addEngineSelectedCategory)
-                          )
-                          .map(engine => {
-                             // Get display category name for the badge
-                            const displayCategory = getDisplayCategoryName(engine);
-                            return (
-                               // --- Modified List Item Div --- 
-                               <div 
-                                 key={engine.id} 
-                                 className="flex items-center gap-2 p-1.5 hover:bg-muted rounded-sm cursor-pointer border-b border-border last:border-b-0" // Changed border-border/40 to border-border
-                                 onClick={() => addEngine(engine.id)} // Make div clickable
-                                 title={`Add ${engine.name}`}
-                               >
-                                 {/* Removed justify-between, name+badges now take available space */}
-                                   <div className="flex flex-col min-w-0 flex-grow"> {/* Added flex-grow */}
-                                     <div className="flex items-center gap-2"> {/* Wrapper for name + badges */}
-                                       <span className="text-sm font-medium truncate">{engine.name}</span> {/* Added font-medium, kept truncate for name */}
-                                        {displayCategory && (
-                                          <Badge variant="secondary" className="text-[10px] font-normal px-1 py-0 flex-shrink-0" title={displayCategory}>{displayCategory}</Badge>
-                                       )}
-                                       {engine.shortcut && (
-                                          <Badge variant="secondary" className="text-[10px] font-mono font-normal px-1 py-0 flex-shrink-0" title={`Shortcut: ${engine.shortcut}`}>{engine.shortcut}</Badge>
-                                       )}
-                                     </div>
-                                     {engine.description && (
-                                       <span className="text-[11px] text-muted-foreground mt-0.5 whitespace-normal" title={engine.description}> {/* Changed text-xs to text-[11px] */} 
-                                         {engine.description}
-                                       </span>
-                                     )}
-                                   </div>
-                               </div>
-                               // --- End Modified List Item Div ---
-                            );
-                          })}
-                        {/* Fallback content when the filter yields no results */}
-                        {addableEngines.filter(engine => 
-                            !addEngineSelectedCategory || 
-                            (engine.categories || []).some(rawCat => rawCat.toLowerCase() === addEngineSelectedCategory)
-                          ).length === 0 && (
-                           <p className="text-sm text-muted-foreground px-4 py-2 text-center">
-                             {/* Different message if *no* engines are addable vs. just none in this category */}
-                             {addableEngines.length === 0 ? "All available engines are currently in this loadout." : "No engines match this category filter."}
-                           </p>
-                         )}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                 
+                      {/* NEW: Scrollable Engine List */}
+                      <ScrollArea className="h-96 w-full rounded-md border p-2 mt-2">
+                        <div className="space-y-1">
+                          {addableEngines
+                            .filter(engine => 
+                              !addEngineSelectedCategory || 
+                              (engine.categories || []).some(rawCat => rawCat.toLowerCase() === addEngineSelectedCategory)
+                            )
+                            .map(engine => {
+                              const displayCategory = getDisplayCategoryName(engine);
+                              return (
+                                <div 
+                                  key={engine.id} 
+                                  className="flex items-center gap-2 p-1.5 hover:bg-muted rounded-sm cursor-pointer border-b border-border last:border-b-0"
+                                  onClick={() => addEngine(engine.id)}
+                                  title={`Add ${engine.name}`}
+                                >
+                                  <div className="flex flex-col min-w-0 flex-grow">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-medium truncate">{engine.name}</span>
+                                      {displayCategory && (
+                                        <Badge variant="secondary" className="text-[10px] font-normal px-1 py-0 flex-shrink-0" title={displayCategory}>{displayCategory}</Badge>
+                                      )}
+                                      {engine.shortcut && (
+                                        <Badge variant="secondary" className="text-[10px] font-mono font-normal px-1 py-0 flex-shrink-0" title={`Shortcut: ${engine.shortcut}`}>{engine.shortcut}</Badge>
+                                      )}
+                                    </div>
+                                    {engine.description && (
+                                      <span className="text-[11px] text-muted-foreground mt-0.5 whitespace-normal" title={engine.description}>
+                                        {engine.description}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          {addableEngines.filter(engine => 
+                              !addEngineSelectedCategory || 
+                              (engine.categories || []).some(rawCat => rawCat.toLowerCase() === addEngineSelectedCategory)
+                            ).length === 0 && (
+                            <p className="text-sm text-muted-foreground px-4 py-2 text-center">
+                              {addableEngines.length === 0 ? "All available engines are currently in this loadout." : "No engines match this category filter."}
+                            </p>
+                          )}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  
+                    {/* List of Enabled Engines */}
+                    <div className="space-y-3 pt-4 border-t">
+                      <h5 className="text-sm font-medium text-muted-foreground mb-2">Enabled Engines:</h5>
+                      {activeConfig.filter(engine => engine.enabled).map(engine => {
+                        // const isStarterActive = activeEngineLoadoutId === 'starter' || activeEngineLoadoutId === null; // This local const is not needed due to outer conditional
+                        return (
+                          <div 
+                            key={engine.id}
+                            className={`border border-border/40 rounded-md p-3 bg-background space-y-3`}
+                          >
+                            {/* Top Row */}
+                            <div className="flex items-center justify-between gap-4">
+                              <div className="flex items-center min-w-0">
+                                <span className="font-medium text-base">{engine.name}</span>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {engine.shortcut && (
+                                  <Badge variant="secondary" className="text-[11px] font-normal px-1.5 py-0.5">
+                                    {engine.shortcut}
+                                  </Badge>
+                                )}
+                                <Badge variant="secondary" className="text-[11px] font-normal px-1.5 py-0.5">{getDisplayCategoryName(engine)}</Badge>
+                                <Badge variant="secondary" className="text-[11px] font-normal px-1.5 py-0.5">
+                                  t/o: {engine.timeout || '3.0'}s
+                                </Badge>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                                  onClick={() => removeEngineFromLoadout(engine.id)}
+                                  title={"Remove this engine"} // Simplified title as this block is not for starter
+                                  // disabled is not needed as this block is not for starter
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </div>
+                            {/* Second Row: Slider */} 
+                            <div className="grid grid-cols-1 gap-4 items-end overflow-hidden">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Weight: {engine.weight.toFixed(1)}</Label> 
+                                <Slider 
+                                  defaultValue={[engine.weight * 10]} 
+                                  value={[engine.weight * 10]} 
+                                  max={10} 
+                                  step={1} 
+                                  onValueChange={(value) => updateEngineWeight(engine.id, value[0] / 10)} 
+                                  className="pt-1" 
+                                  // disabled is not needed as this block is not for starter
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {getEnabledEngineCount() === 0 && (
+                        <p className="text-sm text-muted-foreground text-center py-4">No engines enabled in this loadout. Use the dropdown above to add some.</p>
+                      )}
+                    </div>
+                  </>
                 )}
-
-                {/* Informational text removed */}
-    
-                 {/* List of Enabled Engines */}
-                 <div className="space-y-3 pt-4 border-t">
-                    <h5 className="text-sm font-medium text-muted-foreground mb-2">Enabled Engines:</h5>
-                     {activeConfig.filter(engine => engine.enabled).map(engine => {
-                       const isStarterActive = activeEngineLoadoutId === 'starter' || activeEngineLoadoutId === null;
-                       return (
-                         <div 
-                             key={engine.id}
-                             className={`border border-border/40 rounded-md p-3 bg-background space-y-3 ${isStarterActive ? 'opacity-70' : ''}`}
-                         >
-                             {/* Top Row */}
-                             <div className="flex items-center justify-between gap-4">
-                               {/* Left side */} 
-                               <div className="flex items-center min-w-0"> 
-                                 <span className="font-medium text-base">{engine.name}</span>
-                               </div>
-                               {/* Right side controls - REORDERED & MODIFIED */} 
-                               <div className="flex items-center gap-2 flex-shrink-0">
-                                 {/* 1. Shortcut Badge (if exists) */}
-                                 {engine.shortcut && (
-                                    <Badge variant="secondary" className="text-[11px] font-normal px-1.5 py-0.5">
-                                      {engine.shortcut}
-                                    </Badge>
-                                  )}
-                                 {/* 2. Category Badge */}
-                                 <Badge variant="secondary" className="text-[11px] font-normal px-1.5 py-0.5">{getDisplayCategoryName(engine)}</Badge>
-                                 {/* 3. Timeout Badge (modified text & style) */}
-                                 <Badge variant="secondary" className="text-[11px] font-normal px-1.5 py-0.5">
-                                    t/o: {engine.timeout || '3.0'}s
-                                 </Badge>
-                                 {/* 4. Disable Button */}
-                                 <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                                    onClick={() => removeEngineFromLoadout(engine.id)}
-                                    title={isStarterActive ? "Cannot remove engines from Starter loadout" : "Remove this engine"}
-                                    disabled={isStarterActive}
-                                  >
-                                     <Trash2 className="h-3.5 w-3.5" />
-                                  </Button>
-                               </div>
-                             </div>
-                             {/* Second Row: Slider */} 
-                             <div className="grid grid-cols-1 gap-4 items-end overflow-hidden">
-                               <div className="space-y-1">
-                                 <Label className="text-xs">Weight: {engine.weight.toFixed(1)}</Label> 
-                                 <Slider 
-                                    defaultValue={[engine.weight * 10]} 
-                                    value={[engine.weight * 10]} 
-                                    max={10} 
-                                    step={1} 
-                                    onValueChange={(value) => updateEngineWeight(engine.id, value[0] / 10)} 
-                                    className="pt-1" 
-                                    disabled={isStarterActive} // Disable slider for starter
-                                  />
-                               </div>
-                             </div>
-                         </div>
-                       );
-                     })}
-                     {/* Message if NO engines are enabled (relevant for non-starter) */} 
-                     {getEnabledEngineCount() === 0 && activeEngineLoadoutId !== 'starter' && activeEngineLoadoutId !== null && (
-                         <p className="text-sm text-muted-foreground text-center py-4">No engines enabled in this loadout. Use the dropdown above to add some.</p>
-                     )}
-                 </div>
-            </div>
+             </div>
         </Card>
 
       </CardContent>

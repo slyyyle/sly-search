@@ -158,6 +158,7 @@ export const appSettingsSchema = z.object({
   appearance: z.object({
     resultsLayout: z.string().optional(),
     theme: z.string().optional(),
+    font: z.string().optional(),
     centerAlignment: z.boolean().optional(),
     defaultLocale: z.string().optional(),
     hotkeys: z.string().optional(),
