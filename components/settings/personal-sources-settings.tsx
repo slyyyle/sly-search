@@ -27,6 +27,8 @@ import {
   Image,
   List,
   LayoutGrid,
+  GripVertical,
+  Settings,
 } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
@@ -98,7 +100,7 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
 
   // Default settings within the component
   const currentSources = settings?.sources || [
-      { id: "normal", label: "Web", icon: "Zap", color: "#176BEF", gradient: "from-[#176BEF]/70 to-[#FF3E30]/70" },
+      { id: "web", label: "Web", icon: "Zap", color: "#176BEF", gradient: "from-[#176BEF]/70 to-[#FF3E30]/70" },
       { id: "obsidian", label: "Obsidian", icon: "Brain", color: "#7E6AD7", gradient: "from-[#7E6AD7]/70 to-[#9C87E0]/70" },
       { id: "localFiles", label: "Files", icon: "FileText", color: "#F7B529", gradient: "from-[#FF3E30]/70 to-[#F7B529]/70" },
       { id: "ai", label: "AI", icon: "Bot", color: "#10B981", gradient: "from-[#10B981]/70 to-[#059669]/70" },
@@ -248,8 +250,8 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
 
   // Open source settings dialog
   const openSourceSettings = (sourceId: string) => {
-    // Don't open settings dialog for "normal" (web) source
-    if (sourceId === "normal") {
+    // Don't open settings dialog for "web" source
+    if (sourceId === "web") {
       // Show a message to users that these settings have been moved
       alert("Web search settings have been moved to the Surf Lineup tab.");
       return;
@@ -314,7 +316,7 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
     const currentSourceConfig = settings ? settings[selectedSource as keyof typeof settings] : undefined;
 
     switch (selectedSource) {
-      case "normal": // Handle the 'normal' ID used for Web
+      case "web": // Handle the 'web' ID used for Web
         return { ...defaultWebSettings, ...(currentSourceConfig as WebSourceConfig || {}) };
       case "obsidian":
         return { ...defaultObsidianSettings, ...(currentSourceConfig as ObsidianSourceConfig || {}) };
@@ -464,7 +466,7 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
     const type = source?.type ?? id;
 
     switch (type) {
-      case 'normal': return 'Web Search'; // Display 'Web Search' for 'normal' type/ID
+      case 'web': return 'Web Search'; // Display 'Web Search' for 'web' type/ID
       case 'obsidian': return 'Obsidian';
       case 'localFiles': return 'Local Files';
       case 'ai': return 'AI';
@@ -1469,7 +1471,7 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
           </>
         );
       }
-      case 'normal': { // Corresponds to 'web' source config
+      case 'web': { // Corresponds to 'web' source config
         // Bind to dialogTempSettings, use handlers
         const isListView = dialogTempSettings?.defaultWebView === 'list';
         return (
@@ -1479,7 +1481,7 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
                  <Label htmlFor="dialog-source-label">Display Label</Label>
                  <Input
                    id="dialog-source-label"
-                  value={dialogTempSettings?.label ?? sources.find(s => s.id === 'normal')?.label ?? 'Web'} // Default to the current sources value or Web
+                  value={dialogTempSettings?.label ?? sources.find(s => s.id === 'web')?.label ?? 'Web'} // Default to the current sources value or Web
                   onChange={(e) => handleDialogInputChange('label', e.target.value)} // Update temp state
                    placeholder="Source display name"
                  />
@@ -1651,9 +1653,9 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
                     size="icon"
                     className={cn(
                       "text-muted-foreground hover:text-foreground",
-                      source.id === 'normal' ? "opacity-50 cursor-not-allowed" : ""
+                      source.id === 'web' ? "opacity-50 cursor-not-allowed" : ""
                     )}
-                    disabled={source.id === 'normal'}
+                    disabled={source.id === 'web'}
                     onClick={() => openSourceSettings(source.id)}
                   >
                     <Settings2 className="h-4 w-4" />
@@ -1662,15 +1664,15 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
                   <Button
                     variant="ghost"
                     size="icon"
-                    // Conditionally disable and grey out if source.id is 'normal'
-                    disabled={source.id === 'normal'}
+                    // Conditionally disable and grey out if source.id is 'web'
+                    disabled={source.id === 'web'}
                     className={cn(
                       "hover:bg-red-500/10",
-                      source.id === 'normal' 
+                      source.id === 'web' 
                         ? "text-muted-foreground cursor-not-allowed opacity-50" 
                         : "text-red-500 hover:text-red-600"
                     )}
-                    onClick={() => source.id !== 'normal' && removeSource(source.id)} // Prevent onClick action when disabled
+                    onClick={() => source.id !== 'web' && removeSource(source.id)} // Prevent onClick action when disabled
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

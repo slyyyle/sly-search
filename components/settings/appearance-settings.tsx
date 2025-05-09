@@ -14,6 +14,7 @@ import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Plus, Trash2, Edit2, Image, Link2, Globe } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog"
+import { ThemeSwitcher } from "@/components/theme-switcher"
 
 interface AppearanceSettingsProps {
   settings: AppSettings['appearance']
@@ -207,16 +208,13 @@ export function AppearanceSettings({ settings, updateSetting }: AppearanceSettin
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Label>Board Style</Label>
-              <SettingsTooltip content="Select the visual theme for your SearXNG instance." />
+              <SettingsTooltip content="Select the visual theme for the application's gradients." />
             </div>
-            <div className="max-w-[200px]">
-              <Button
-                variant="outline"
-                className={`justify-start w-full ${currentSettings.theme === "cyberpunk" ? "border-purple-500/50 bg-gradient-to-br from-purple-900/20 to-cyan-900/20" : ""}`}
-                onClick={() => updateSetting("appearance", "theme", "cyberpunk")}
-              >
-                Cyberpunk
-              </Button>
+            <div className="max-w-[200px] w-full">
+              <ThemeSwitcher 
+                value={currentSettings.theme || 'google-original'} 
+                onThemeChange={(themeId) => updateSetting("appearance", "theme", themeId)}
+              />
             </div>
           </div>
 
@@ -352,7 +350,7 @@ export function AppearanceSettings({ settings, updateSetting }: AppearanceSettin
                         {links.map(link => (
                           <div 
                             key={link.id} 
-                            className="relative group p-3 border rounded-lg h-24 flex flex-col items-center justify-center bg-background/60 google-gradient-border hover:bg-background/80 transition-all"
+                            className="relative group p-3 border rounded-lg h-24 flex flex-col items-center justify-center bg-background/60 themed-gradient-border hover:bg-background/80 transition-all"
                           >
                             <button
                               onClick={(e) => {

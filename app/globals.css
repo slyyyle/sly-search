@@ -34,11 +34,216 @@
 
     --radius: 0.5rem;
 
-    /* Google colors */
-    --google-blue: 217 90% 51%; /* #176BEF */
-    --google-red: 5 100% 59%; /* #FF3E30 */
-    --google-yellow: 42 93% 56%; /* #F7B529 */
-    --google-green: 145 74% 35%; /* #179C52 */
+    /* Google colors (Original Theme) */
+    --google-color-1-rgb: 23, 107, 239; /* Blue */
+    --google-color-2-rgb: 255, 62, 48; /* Red */
+    --google-color-3-rgb: 247, 181, 41; /* Yellow */
+    --google-color-4-rgb: 23, 156, 82; /* Green */
+
+    /* Ocean Breeze Theme colors - Updated */
+    --ocean-color-1-rgb: 72, 209, 204;   /* New: #48D1CC (Medium Turquoise / Vibrant Seafoam Blue) */
+    --ocean-color-2-rgb: 255, 165, 0;    /* New: #FFA500 (Orange) */
+    --ocean-color-3-rgb: 135, 206, 250;  /* New: #87CEFA (Light Sky Blue) */
+    --ocean-color-4-rgb: 240, 255, 255;  /* New: #F0FFFF (Azure / Near White) */
+
+    /* Sunset Tide Theme colors */
+    --sunset-tide-c1-rgb: 0, 242, 96;    /* New: #00f260 */
+    --sunset-tide-c2-rgb: 5, 117, 230;   /* New: #0575e6 */
+    --sunset-tide-c3-rgb: 252, 74, 26;    /* New: #fc4a1a */
+    --sunset-tide-c4-rgb: 247, 183, 51;   /* New: #f7b733 */
+
+    /* Surf Shine Theme colors */
+    --surf-shine-c1-rgb: 18, 194, 233;   /* New: #12c2e9 */
+    --surf-shine-c2-rgb: 196, 113, 237;  /* New: #c471ed */
+    --surf-shine-c3-rgb: 246, 79, 89;    /* New: #f64f59 */
+    --surf-shine-c4-rgb: 196, 113, 237;  /* New: #c471ed (repeated C2) */
+
+    /* Wedding Day Shred Theme colors (was Monochrome Steel) */
+    --wedding-day-shred-c1-rgb: 64, 224, 208;    /* New: #40e0d0 */
+    --wedding-day-shred-c2-rgb: 255, 140, 0;   /* New: #ff8c00 */
+    --wedding-day-shred-c3-rgb: 255, 0, 128;  /* New: #ff0080 */
+    --wedding-day-shred-c4-rgb: 255, 140, 0;   /* New: #ff8c00 (repeated C2) */
+
+    /* Rasta Waves Theme colors */
+    --rasta-waves-c1-rgb: 30, 150, 0;    /* New: #1e9600 */
+    --rasta-waves-c2-rgb: 255, 242, 0;   /* New: #fff200 */
+    --rasta-waves-c3-rgb: 255, 0, 0;    /* New: #ff0000 */
+    --rasta-waves-c4-rgb: 255, 242, 0;   /* New: #fff200 (repeated C2) */
+
+    /* Surfhabi Theme colors */
+    --surfhabi-c1-rgb: 168, 0, 119;    /* New: #a80077 */
+    --surfhabi-c2-rgb: 102, 255, 0;  /* New: #66ff00 */
+    --surfhabi-c3-rgb: 168, 0, 119;    /* New: #a80077 (repeated C1) */
+    --surfhabi-c4-rgb: 102, 255, 0;  /* New: #66ff00 (repeated C2) */
+
+    /* Island Hopper Theme colors */
+    --island-hopper-c1-rgb: 0, 128, 128;
+    --island-hopper-c2-rgb: 245, 222, 179;
+    --island-hopper-c3-rgb: 34, 139, 34;
+    --island-hopper-c4-rgb: 255, 105, 180;
+
+    /* Mango Tango Theme colors */
+    --mango-tango-c1-rgb: 255, 165, 0;
+    --mango-tango-c2-rgb: 255, 223, 0;
+    --mango-tango-c3-rgb: 50, 205, 50;
+    --mango-tango-c4-rgb: 255, 20, 147;
+
+    /* Lagoon Luster Theme colors */
+    --lagoon-luster-c1-rgb: 0, 255, 255;
+    --lagoon-luster-c2-rgb: 240, 248, 255;
+    --lagoon-luster-c3-rgb: 144, 238, 144;
+    --lagoon-luster-c4-rgb: 255, 250, 205;
+
+    /* Hibiscus Heat Theme colors */
+    --hibiscus-heat-c1-rgb: 255, 0, 0;
+    --hibiscus-heat-c2-rgb: 255, 0, 255;
+    --hibiscus-heat-c3-rgb: 255, 215, 0;
+    --hibiscus-heat-c4-rgb: 0, 128, 0;
+
+    /* Neon Pipeline Theme colors */
+    --neon-pipeline-c1-rgb: 0, 111, 255;
+    --neon-pipeline-c2-rgb: 57, 255, 20;
+    --neon-pipeline-c3-rgb: 255, 32, 164;
+    --neon-pipeline-c4-rgb: 128, 0, 128;
+
+    /* Chrome Wave Theme colors */
+    --chrome-wave-c1-rgb: 192, 192, 192;
+    --chrome-wave-c2-rgb: 0, 255, 255;
+    --chrome-wave-c3-rgb: 30, 30, 30;
+    --chrome-wave-c4-rgb: 230, 230, 230;
+
+    /* Cyber Reef Theme colors */
+    --cyber-reef-c1-rgb: 75, 0, 130;
+    --cyber-reef-c2-rgb: 0, 128, 128;
+    --cyber-reef-c3-rgb: 199, 21, 133;
+    --cyber-reef-c4-rgb: 255, 255, 0;
+
+    /* Quantum Swell Theme colors */
+    --quantum-swell-c1-rgb: 51, 0, 102;
+    --quantum-swell-c2-rgb: 0, 238, 238;
+    --quantum-swell-c3-rgb: 153, 51, 255;
+    --quantum-swell-c4-rgb: 65, 105, 225;
+
+    /* Default Gradient Colors (Google Original) */
+    --gradient-color-1: var(--google-color-1-rgb);
+    --gradient-color-2: var(--google-color-2-rgb);
+    --gradient-color-3: var(--google-color-3-rgb);
+    --gradient-color-4: var(--google-color-4-rgb);
+
+    /* Slider Thumb Border Color */
+    --slider-thumb-border-color: var(--google-color-1-rgb); /* Default to Google Blue */
+  }
+
+  html[data-theme="ocean-breeze"] {
+    --gradient-color-1: var(--ocean-color-1-rgb);
+    --gradient-color-2: var(--ocean-color-2-rgb);
+    --gradient-color-3: var(--ocean-color-3-rgb);
+    --gradient-color-4: var(--ocean-color-4-rgb);
+    --slider-thumb-border-color: var(--ocean-color-1-rgb); /* New: #48D1CC (Medium Turquoise / Vibrant Seafoam Blue) */
+  }
+
+  html[data-theme="sunset-tide"] { /* Was sunset-vibes, Maps to Sunset Tide */
+    --gradient-color-1: var(--sunset-tide-c1-rgb);
+    --gradient-color-2: var(--sunset-tide-c2-rgb);
+    --gradient-color-3: var(--sunset-tide-c3-rgb);
+    --gradient-color-4: var(--sunset-tide-c4-rgb);
+    --slider-thumb-border-color: var(--sunset-tide-c2-rgb); /* New: #0575e6 (Blue) */
+  }
+
+  html[data-theme="surf-shine"] { /* Was nebula, Maps to Surf Shine */
+    --gradient-color-1: var(--surf-shine-c1-rgb);
+    --gradient-color-2: var(--surf-shine-c2-rgb);
+    --gradient-color-3: var(--surf-shine-c3-rgb);
+    --gradient-color-4: var(--surf-shine-c4-rgb);
+    --slider-thumb-border-color: var(--surf-shine-c1-rgb); /* New: #12c2e9 (Teal) */
+  }
+
+  html[data-theme="wedding-day-shred"] { /* Was monochrome-steel, Maps to Wedding Day Shred */
+    --gradient-color-1: var(--wedding-day-shred-c1-rgb);
+    --gradient-color-2: var(--wedding-day-shred-c2-rgb);
+    --gradient-color-3: var(--wedding-day-shred-c3-rgb);
+    --gradient-color-4: var(--wedding-day-shred-c4-rgb);
+    --slider-thumb-border-color: var(--wedding-day-shred-c1-rgb); /* New: #40e0d0 (Turquoise) */
+  }
+
+  html[data-theme="rasta-waves"] { /* Was desert-mirage, Maps to Rasta Waves */
+    --gradient-color-1: var(--rasta-waves-c1-rgb);
+    --gradient-color-2: var(--rasta-waves-c2-rgb);
+    --gradient-color-3: var(--rasta-waves-c3-rgb);
+    --gradient-color-4: var(--rasta-waves-c4-rgb);
+    --slider-thumb-border-color: var(--rasta-waves-c2-rgb); /* New: #fff200 (Yellow) */
+  }
+
+  html[data-theme="surfhabi"] { /* Was ruby-flare, Maps to Surfhabi */
+    --gradient-color-1: var(--surfhabi-c1-rgb);
+    --gradient-color-2: var(--surfhabi-c2-rgb);
+    --gradient-color-3: var(--surfhabi-c3-rgb);
+    --gradient-color-4: var(--surfhabi-c4-rgb);
+    --slider-thumb-border-color: var(--surfhabi-c1-rgb); /* New: #a80077 (Magenta) */
+  }
+
+  html[data-theme="island-hopper"] {
+    --gradient-color-1: var(--island-hopper-c1-rgb);
+    --gradient-color-2: var(--island-hopper-c2-rgb);
+    --gradient-color-3: var(--island-hopper-c3-rgb);
+    --gradient-color-4: var(--island-hopper-c4-rgb);
+    --slider-thumb-border-color: var(--island-hopper-c1-rgb);
+  }
+
+  html[data-theme="mango-tango"] {
+    --gradient-color-1: var(--mango-tango-c1-rgb);
+    --gradient-color-2: var(--mango-tango-c2-rgb);
+    --gradient-color-3: var(--mango-tango-c3-rgb);
+    --gradient-color-4: var(--mango-tango-c4-rgb);
+    --slider-thumb-border-color: var(--mango-tango-c1-rgb);
+  }
+
+  html[data-theme="lagoon-luster"] {
+    --gradient-color-1: var(--lagoon-luster-c1-rgb);
+    --gradient-color-2: var(--lagoon-luster-c2-rgb);
+    --gradient-color-3: var(--lagoon-luster-c3-rgb);
+    --gradient-color-4: var(--lagoon-luster-c4-rgb);
+    --slider-thumb-border-color: var(--lagoon-luster-c1-rgb);
+  }
+
+  html[data-theme="hibiscus-heat"] {
+    --gradient-color-1: var(--hibiscus-heat-c1-rgb);
+    --gradient-color-2: var(--hibiscus-heat-c2-rgb);
+    --gradient-color-3: var(--hibiscus-heat-c3-rgb);
+    --gradient-color-4: var(--hibiscus-heat-c4-rgb);
+    --slider-thumb-border-color: var(--hibiscus-heat-c1-rgb);
+  }
+
+  html[data-theme="neon-pipeline"] {
+    --gradient-color-1: var(--neon-pipeline-c1-rgb);
+    --gradient-color-2: var(--neon-pipeline-c2-rgb);
+    --gradient-color-3: var(--neon-pipeline-c3-rgb);
+    --gradient-color-4: var(--neon-pipeline-c4-rgb);
+    --slider-thumb-border-color: var(--neon-pipeline-c1-rgb);
+  }
+
+  html[data-theme="chrome-wave"] {
+    --gradient-color-1: var(--chrome-wave-c1-rgb);
+    --gradient-color-2: var(--chrome-wave-c2-rgb);
+    --gradient-color-3: var(--chrome-wave-c3-rgb);
+    --gradient-color-4: var(--chrome-wave-c4-rgb);
+    --slider-thumb-border-color: var(--chrome-wave-c2-rgb);
+  }
+
+  html[data-theme="cyber-reef"] {
+    --gradient-color-1: var(--cyber-reef-c1-rgb);
+    --gradient-color-2: var(--cyber-reef-c2-rgb);
+    --gradient-color-3: var(--cyber-reef-c3-rgb);
+    --gradient-color-4: var(--cyber-reef-c4-rgb);
+    --slider-thumb-border-color: var(--cyber-reef-c2-rgb);
+  }
+
+  html[data-theme="quantum-swell"] {
+    --gradient-color-1: var(--quantum-swell-c1-rgb);
+    --gradient-color-2: var(--quantum-swell-c2-rgb);
+    --gradient-color-3: var(--quantum-swell-c3-rgb);
+    --gradient-color-4: var(--quantum-swell-c4-rgb);
+    --slider-thumb-border-color: var(--quantum-swell-c2-rgb);
   }
 }
 
@@ -51,24 +256,24 @@
   }
 }
 
-/* Google gradient classes */
-.google-gradient {
+/* Themed gradient classes */
+.themed-gradient {
   background: linear-gradient(
     90deg,
-    rgb(23, 107, 239) /* Blue */,
-    rgb(255, 62, 48) /* Red */,
-    rgb(247, 181, 41) /* Yellow */,
-    rgb(23, 156, 82) /* Green */
+    rgb(var(--gradient-color-1)),
+    rgb(var(--gradient-color-2)),
+    rgb(var(--gradient-color-3)),
+    rgb(var(--gradient-color-4))
   );
 }
 
-.google-gradient-text {
+.themed-gradient-text {
   background: linear-gradient(
     90deg,
-    rgb(23, 107, 239) /* Blue */,
-    rgb(255, 62, 48) /* Red */,
-    rgb(247, 181, 41) /* Yellow */,
-    rgb(23, 156, 82) /* Green */
+    rgb(var(--gradient-color-1)),
+    rgb(var(--gradient-color-2)),
+    rgb(var(--gradient-color-3)),
+    rgb(var(--gradient-color-4))
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -76,26 +281,16 @@
   text-fill-color: transparent;
 }
 
-/* Special logo text with pure Google colors - NO GLOW */
+/* Special logo text - now uses themed gradient */
 .logo-text {
-  background: linear-gradient(
-    90deg,
-    rgb(23, 107, 239) /* Blue */,
-    rgb(255, 62, 48) /* Red */,
-    rgb(247, 181, 41) /* Yellow */,
-    rgb(23, 156, 82) /* Green */
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-fill-color: transparent;
+  @apply themed-gradient-text;
 }
 
-.google-gradient-border {
+.themed-gradient-border {
   position: relative;
 }
 
-.google-gradient-border::before {
+.themed-gradient-border::before {
   content: "";
   position: absolute;
   top: 0;
@@ -103,13 +298,13 @@
   right: 0;
   bottom: 0;
   border-radius: inherit;
-  padding: 2px;
+  padding: 2px; /* Thickness of the border */
   background: linear-gradient(
     90deg,
-    rgb(23, 107, 239) /* Blue */,
-    rgb(255, 62, 48) /* Red */,
-    rgb(247, 181, 41) /* Yellow */,
-    rgb(23, 156, 82) /* Green */
+    rgb(var(--gradient-color-1)),
+    rgb(var(--gradient-color-2)),
+    rgb(var(--gradient-color-3)),
+    rgb(var(--gradient-color-4))
   );
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -118,13 +313,65 @@
   opacity: 1;
 }
 
-/* Legacy classes that now use the Google gradient */
+/* New: Themed gradient classes with transparency */
+.themed-gradient-transparent {
+  background: linear-gradient(
+    90deg,
+    rgba(var(--gradient-color-1), 0.7),
+    rgba(var(--gradient-color-2), 0.7),
+    rgba(var(--gradient-color-3), 0.7),
+    rgba(var(--gradient-color-4), 0.7)
+  );
+}
+
+.themed-gradient-text-transparent {
+  background: linear-gradient(
+    90deg,
+    rgba(var(--gradient-color-1), 0.7),
+    rgba(var(--gradient-color-2), 0.7),
+    rgba(var(--gradient-color-3), 0.7),
+    rgba(var(--gradient-color-4), 0.7)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+.themed-gradient-border-transparent {
+  position: relative;
+}
+
+.themed-gradient-border-transparent::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  padding: 2px; /* Thickness of the border */
+  background: linear-gradient(
+    90deg,
+    rgba(var(--gradient-color-1), 0.7),
+    rgba(var(--gradient-color-2), 0.7),
+    rgba(var(--gradient-color-3), 0.7),
+    rgba(var(--gradient-color-4), 0.7)
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 1;
+}
+
+/* Legacy classes that now use the THEMED gradient */
 .cyberpunk-gradient {
-  @apply google-gradient-text;
+  @apply themed-gradient-text;
 }
 
 .cyberpunk-border {
-  @apply google-gradient-border;
+  @apply themed-gradient-border;
 }
 
 .search-results-container {
@@ -143,19 +390,9 @@
   color: white !important;
 }
 
-/* Ensure "Press Enter to Search" text is vibrant - NO GLOW */
+/* Ensure "Press Enter to Search" text is vibrant - now uses themed gradient */
 .search-hint {
-  background: linear-gradient(
-    90deg,
-    rgb(23, 107, 239) /* Blue */,
-    rgb(255, 62, 48) /* Red */,
-    rgb(247, 181, 41) /* Yellow */,
-    rgb(23, 156, 82) /* Green */
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-fill-color: transparent;
+  @apply themed-gradient-text;
 }
 
 /* Letter hop animation */

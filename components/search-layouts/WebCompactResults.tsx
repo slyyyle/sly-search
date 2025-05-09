@@ -57,4 +57,4 @@ const CompactResults: React.FC<CompactResultsProps> = ({ results, openInNewTab =
   )
 }
 
-export default CompactResults
+export default CompactResults 

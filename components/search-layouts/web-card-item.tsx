@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge"
 import type { WebResult } from "@/types/search"
 import { cn } from "@/lib/utils"
+import Image from 'next/image';
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface WebCardItemProps {
   result: WebResult;
@@ -36,6 +38,20 @@ const WebCardItem: React.FC<WebCardItemProps> = ({ result, openInNewTab = true }
 
   return (
     <Card className="flex flex-col h-full overflow-hidden hover:shadow-lg transition-shadow duration-200 bg-background/60">
+      {/* Image at the top if present */}
+      {result.img_src && (
+        <AspectRatio ratio={16 / 9} className="bg-muted rounded-t-md overflow-hidden">
+          <Image
+            src={result.img_src}
+            alt={result.title || 'Result image'}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
+            loading="lazy"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+          />
+        </AspectRatio>
+      )}
       <CardHeader className="p-4">
         <div className="flex items-start gap-3">
           {faviconUrl && (

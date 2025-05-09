@@ -20,9 +20,9 @@ const KnowledgeSourceSelector: React.FC<KnowledgeSourceSelectorProps> = ({
 }) => {
   const { settings } = useSettings()
   const knowledgeSources = settings.personalSources?.sources || [
-    { id: "normal", label: "", icon: "Zap", color: "#176BEF" }, // Google Blue
+    { id: "web", label: "", icon: "Zap", color: "#176BEF" }, // Google Blue
     { id: "local", label: "Local", icon: "Database", color: "#F7B529" }, // Google Yellow
-    { id: "web", label: "Web", icon: "Globe", color: "text-white" },
+    { id: "global", label: "Web", icon: "Globe", color: "text-white" },
   ]
 
   // If showOnlySelected is true, filter to only show the selected source
@@ -49,16 +49,16 @@ const KnowledgeSourceSelector: React.FC<KnowledgeSourceSelectorProps> = ({
   }
 
   const activeBackgrounds = {
-    normal: "bg-gradient-to-r from-[#176BEF]/70 to-[#FF3E30]/70",
-    local: "bg-gradient-to-r from-[#FF3E30]/70 to-[#F7B529]/70",
-    web: "bg-gradient-to-r from-[#176BEF]/70 to-[#FF3E30]/70",
-    obsidian: "bg-gradient-to-r from-[#7E6AD7]/70 to-[#9C87E0]/70",
+    web: "themed-gradient-transparent",
+    local: "themed-gradient-transparent",
+    global: "themed-gradient-transparent",
+    obsidian: "themed-gradient-transparent",
   }
 
   return (
     <div
       className={cn(
-        "flex google-gradient-border rounded-md p-1",
+        "flex themed-gradient-border rounded-md p-1",
         compact ? "h-8" : "h-10",
         "min-w-fit", // Ensure container is wide enough for content
       )}

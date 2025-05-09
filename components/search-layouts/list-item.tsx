@@ -6,6 +6,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { SearchResultItem, WebResult, ObsidianResult, YouTubeResultItem, PhotoResultItem } from "@/types/search"
 import { cn } from "@/lib/utils"
 import { useSettings } from "@/lib/use-settings"
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, ContextMenuSub, ContextMenuSubTrigger, ContextMenuSubContent } from "@/components/ui/context-menu"
+import { useToast } from "@/components/ui/use-toast"
 
 // --- Helper Favicon Component ---
 interface WebResultFaviconProps {
@@ -62,9 +64,19 @@ function isPhotoResult(result: SearchResultItem): result is PhotoResultItem {
     return result.source === 'photos';
 }
 
+// --- Type Guard for WebResult with Tags --- 
+function isWebResultWithTags(result: SearchResultItem): result is WebResult & { tags: string[] } {
+  return result.source === 'web' && 
+         'tags' in result && 
+         Array.isArray(result.tags) && 
+         result.tags.length > 0;
+}
+
 const ListItem: React.FC<ListItemProps> = ({ result, openInNewTab = true }) => {
+  const { settings, updateSetting } = useSettings()
+  const { toast } = useToast()
+
   // Get Invidious instance from settings
-  const { settings } = useSettings();
   const invidiousInstance = settings?.personalSources?.youtube?.invidiousInstance || "yewtu.be";
 
   const isObsidian = isObsidianResult(result);
@@ -97,7 +109,7 @@ const ListItem: React.FC<ListItemProps> = ({ result, openInNewTab = true }) => {
   if ('engines' in result && result.engines) { // Check if 'engines' exists
     displaySource = Array.isArray(result.engines) ? result.engines.join(", ") : result.engines;
   } else if (result.source) {
-    if (result.source === 'web' || result.source === 'normal') {
+    if (result.source === 'web') {
       displaySource = "Web";
     } else if (result.source === 'obsidian') {
       displaySource = "Obsidian";
@@ -173,6 +185,79 @@ const ListItem: React.FC<ListItemProps> = ({ result, openInNewTab = true }) => {
    }
   // --- End Determine Pretty URL/Path/Filename ---
 
+  // Function to add link to quick links with category
+  const handleAddToQuickLinks = (url: string, title: string, category: string = 'General') => {
+    try {
+      if (!settings || !settings.appearance || !updateSetting) {
+        throw new Error("Settings or update function not available");
+      }
+      
+      const currentQuickLinks = settings.appearance.quickLinks || []
+      const newLink = {
+        id: `link-${Date.now()}`,
+        label: title,
+        url: url,
+        category: category
+      }
+      
+      // Check if link already exists
+      if (currentQuickLinks.some(link => link.url === url)) {
+        toast({
+          title: "Link already exists",
+          description: "This link is already in your quick links.",
+          variant: "default",
+        })
+        return
+      }
+
+      const updatedQuickLinks = [...currentQuickLinks, newLink]
+      updateSetting("appearance", "quickLinks", updatedQuickLinks)
+      
+      toast({
+        title: "Link added",
+        description: `The link has been added to your quick links in the ${category} category.`,
+        variant: "default",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Unable to add link to quick links.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  // Function to remove link from quick links
+  const handleRemoveFromQuickLinks = (url: string) => {
+    try {
+      if (!settings || !settings.appearance || !updateSetting) {
+        throw new Error("Settings or update function not available");
+      }
+      
+      const currentQuickLinks = settings.appearance.quickLinks || []
+      const updatedQuickLinks = currentQuickLinks.filter(link => link.url !== url)
+      
+      updateSetting("appearance", "quickLinks", updatedQuickLinks)
+      
+      toast({
+        title: "Link removed",
+        description: "The link has been removed from your quick links.",
+        variant: "default",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Unable to remove link from quick links.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  // Function to check if a link is in quick links
+  const isLinkInQuickLinks = (url: string) => {
+    return settings?.appearance?.quickLinks?.some(link => link.url === url) || false;
+  }
+
   return (
     <div className="flex gap-4 space-y-1.5">
       {/* Conditional Thumbnail Rendering */}
@@ -197,20 +282,47 @@ const ListItem: React.FC<ListItemProps> = ({ result, openInNewTab = true }) => {
            {isPhoto && <Image className="h-4 w-4 mr-1.5 text-blue-400 flex-shrink-0" />} {/* Example Icon */}
 
            {primaryUrl ? (
-             <a
-               href={primaryUrl}
-               target={openInNewTab ? "_blank" : "_self"}
-               rel={openInNewTab ? "noopener noreferrer" : ""}
-               className={cn(
-                 "text-lg font-semibold group line-clamp-2",
-                 isYouTube ? "text-red-400 hover:underline" : "text-blue-400 group-hover:underline" // Style YT differently
-               )}
-             >
-               {displayTitle}
-               {openInNewTab && (
-                 <ExternalLink className="h-3.5 w-3.5 ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity inline-block" />
-               )}
-             </a>
+             <ContextMenu>
+               <ContextMenuTrigger>
+                 <a
+                   href={primaryUrl}
+                   target={openInNewTab ? "_blank" : "_self"}
+                   rel={openInNewTab ? "noopener noreferrer" : ""}
+                   className={cn(
+                     "text-lg font-semibold group line-clamp-2",
+                     isYouTube ? "text-red-400 hover:underline" : "text-blue-400 group-hover:underline" // Style YT differently
+                   )}
+                 >
+                   {displayTitle}
+                   {openInNewTab && (
+                     <ExternalLink className="h-3.5 w-3.5 ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity inline-block" />
+                   )}
+                 </a>
+               </ContextMenuTrigger>
+               <ContextMenuContent>
+                 <ContextMenuSub>
+                   <ContextMenuSubTrigger>Add to Quick Links</ContextMenuSubTrigger>
+                   <ContextMenuSubContent>
+                     {Array.from(new Set(settings?.appearance?.quickLinks?.map(link => link.category || 'General') || ['General'])).map(category => (
+                       <ContextMenuItem 
+                         key={category}
+                         onClick={() => handleAddToQuickLinks(primaryUrl, displayTitle, category)}
+                       >
+                         {category}
+                       </ContextMenuItem>
+                     ))}
+                   </ContextMenuSubContent>
+                 </ContextMenuSub>
+                 {isLinkInQuickLinks(primaryUrl) && (
+                   <ContextMenuItem 
+                     onClick={() => handleRemoveFromQuickLinks(primaryUrl)}
+                     className="text-red-500"
+                   >
+                     Remove from Quick Links
+                   </ContextMenuItem>
+                 )}
+               </ContextMenuContent>
+             </ContextMenu>
            ) : (
              // Render title without link (e.g., for Obsidian, Photos)
              <h3 className={cn(
@@ -309,11 +421,11 @@ const ListItem: React.FC<ListItemProps> = ({ result, openInNewTab = true }) => {
             </TooltipProvider>
           )}
 
-          {/* Tags (Example for WebResult) - Check type */}
-          {result.source === 'web' && (result as WebResult).tags && (result as WebResult).tags.length > 0 && (
+          {/* Tags (Example for WebResult) - Use type guard */}
+          {isWebResultWithTags(result) && (
             <div className="flex items-center gap-1">
               <Tag className="h-3 w-3" />
-              {(result as WebResult).tags.map((tag) => (
+              {result.tags.map((tag) => (
                 <span key={tag} className="px-1.5 py-0.5 bg-gray-700 rounded text-xs">{tag}</span>
               ))}
             </div>

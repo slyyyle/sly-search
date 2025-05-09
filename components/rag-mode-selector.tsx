@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { Database, Globe, Zap } from "lucide-react"
+import { Database, Globe, Zap, Crosshair, WandSparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface RagModeSelectorProps {
@@ -13,28 +13,28 @@ interface RagModeSelectorProps {
 
 const RagModeSelector: React.FC<RagModeSelectorProps> = ({ value, onChange, compact = false }) => {
   // Define gradient backgrounds for each position
-  const activeBackgrounds = {
-    normal: "bg-gradient-to-r from-[#176BEF]/70 to-[#FF3E30]/70", // Blue to Red
-    local: "bg-gradient-to-r from-[#FF3E30]/70 to-[#F7B529]/70", // Red to Yellow
-    web: "bg-gradient-to-r from-[#F7B529]/70 to-[#179C52]/70", // Yellow to Green
+  const gradientClasses: { [key: string]: string } = {
+    web: "themed-gradient-transparent", // Blue to Red (now themeable transparent)
+    precise: "themed-gradient-transparent", // Green to Blue (now themeable transparent)
+    creative: "themed-gradient-transparent", // Purple to Pink (now themeable transparent)
   }
 
-  const options = [
-    { id: "normal", label: "", icon: Zap, color: "text-[#176BEF]" }, // Google Blue
-    { id: "local", label: "Local", icon: Database, color: "text-[#F7B529]" }, // Google Yellow
-    { id: "web", label: "Web", icon: Globe, color: "text-white" },
+  const sources = [
+    { id: "web", label: "", icon: Zap, color: "text-[#176BEF]" }, // Google Blue
+    { id: "precise", label: "", icon: Crosshair, color: "text-green-500" }, // Green
+    { id: "creative", label: "", icon: WandSparkles, color: "text-purple-500" }, // Purple
   ]
 
   return (
     <div
       className={cn(
-        "flex google-gradient-border rounded-md p-1",
+        "flex themed-gradient-border rounded-md p-1",
         compact ? "h-8" : "h-10",
         "min-w-fit", // Ensure container is wide enough for content
       )}
       style={{ backgroundColor: "#000000" }} // Solid black background
     >
-      {options.map((option) => {
+      {sources.map((option) => {
         const isActive = value === option.id
         const Icon = option.icon
 
@@ -46,7 +46,7 @@ const RagModeSelector: React.FC<RagModeSelectorProps> = ({ value, onChange, comp
             className={cn(
               "flex items-center justify-center transition-all duration-200 rounded-sm whitespace-nowrap",
               compact ? "text-xs px-2" : "text-sm px-3",
-              isActive ? activeBackgrounds[option.id as keyof typeof activeBackgrounds] : "hover:bg-[#176BEF]/20",
+              isActive ? gradientClasses[option.id as keyof typeof gradientClasses] : "hover:bg-[#176BEF]/20",
             )}
             style={{
               flex: "1 1 auto",

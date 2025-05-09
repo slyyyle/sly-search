@@ -6,6 +6,10 @@ const nextConfig = {
     if (process.env.NEXT_PUBLIC_BACKEND_URL) {
       return [
         {
+          source: '/api/v1/engines/select',
+          destination: '/api/v1/engines/select', // identity rewrite to hit our Route Handler
+        },
+        {
           source: '/api/:path*',
           destination: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/:path*`,
         },

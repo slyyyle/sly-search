@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -8,11 +8,11 @@ import { Slider } from "@/components/ui/slider"
 import { Separator } from "@/components/ui/separator"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { SettingsTooltip } from "@/components/settings-tooltip"
-import { Plus, ChevronDown, ChevronUp, Settings2, X, Trash2, Check, Edit2 } from "lucide-react"
+import { Plus, ChevronDown, ChevronUp, Settings2, X, Trash2, Check, Edit2, Save, ArrowUpDown, Lock } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { LoadoutManager } from "@/components/loadout-manager"
-import { useSettings, type AppSettings, type Engine } from "@/lib/use-settings"
+import { useSettings, type AppSettings, type Engine, type EngineLoadout } from "@/lib/use-settings"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { 
@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/accordion"
 import { Switch } from "@/components/ui/switch"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 // Define props interface
 interface EnginesSettingsProps { }
@@ -59,7 +60,7 @@ export function EnginesSettings({ }: EnginesSettingsProps) {
     saveLoadout,
     selectLoadout,
     deleteLoadout,
-    availableEngines,
+    availableEngines: fetchedEngines,
     loading,
     activeEngineLoadoutId,
   } = useSettings()
@@ -76,11 +77,11 @@ export function EnginesSettings({ }: EnginesSettingsProps) {
   const [isNameDialogOpen, setIsNameDialogOpen] = useState(false);
   const [newLoadoutNameInput, setNewLoadoutNameInput] = useState("");
 
-  console.log("EnginesSettings rendering, availableEngines:", availableEngines); // <<< Add log here
+  console.log("EnginesSettings rendering, availableEngines:", fetchedEngines); // <<< Add log here
 
   // <<< ADDED: Calculate activeConfig directly using useMemo >>>
   const activeConfig = useMemo((): Engine[] => {
-    if (loading || !availableEngines || availableEngines.length === 0) return [];
+    if (loading || !fetchedEngines || fetchedEngines.length === 0) return [];
 
     console.log('Calculating activeConfig based on availableEngines and loadouts...');
 
@@ -89,7 +90,7 @@ export function EnginesSettings({ }: EnginesSettingsProps) {
 
     if (currentActiveId === 'starter') {
       // Generate the starter config based on availableEngines
-      calculatedConfig = availableEngines.map(engine => ({
+      calculatedConfig = fetchedEngines.map(engine => ({
         ...engine,
         enabled: engine.id === 'google',
         weight: 1.0,
@@ -102,7 +103,7 @@ export function EnginesSettings({ }: EnginesSettingsProps) {
       if (savedLoadout) {
         // Merge saved loadout config with available engines for completeness
         const loadoutConfig = savedLoadout.config || [];
-        calculatedConfig = availableEngines.map(availableEngine => {
+        calculatedConfig = fetchedEngines.map(availableEngine => {
           const engineFromLoadout = loadoutConfig.find(le => String(le.id) === String(availableEngine.id));
           return {
               ...availableEngine, // Start with potentially updated info from API
@@ -119,7 +120,7 @@ export function EnginesSettings({ }: EnginesSettingsProps) {
       } else {
         // Fallback: Loadout ID is invalid, revert to starter (should be caught by useSettings ideally)
         console.warn(`Active loadout ID ${currentActiveId} not found, falling back to Starter config.`);
-        calculatedConfig = availableEngines.map(engine => ({
+        calculatedConfig = fetchedEngines.map(engine => ({
            ...engine,
            enabled: engine.id === 'google',
            weight: 1.0,
@@ -127,7 +128,7 @@ export function EnginesSettings({ }: EnginesSettingsProps) {
       }
     }
     return calculatedConfig;
-  }, [availableEngines, activeEngineLoadoutId, settings.engines?.loadouts, loading]); // Dependencies match the old useEffect
+  }, [fetchedEngines, activeEngineLoadoutId, settings.engines?.loadouts, loading]); // Dependencies match the old useEffect
 
   // <<< MODIFIED: addableEngines depends on activeConfig now >>>
   // <<< REVISED CALCULATION: Base on saved loadout config, not merged activeConfig >>>
@@ -157,14 +158,14 @@ export function EnginesSettings({ }: EnginesSettingsProps) {
     console.log(`-- savedEngineIds Set: ${JSON.stringify(Array.from(savedEngineIds))}`);
 
     // Return engines from the master list that are NOT in the saved loadout's config
-    const filteredEngines = availableEngines.filter(engine => !savedEngineIds.has(String(engine.id)));
-    console.log(`-- availableEngines count: ${availableEngines.length}`);
+    const filteredEngines = fetchedEngines.filter(engine => !savedEngineIds.has(String(engine.id)));
+    console.log(`-- availableEngines count: ${fetchedEngines.length}`);
     console.log(`-- Final addableEngines count: ${filteredEngines.length}`);
     // console.log(`-- Final addableEngines list: ${JSON.stringify(filteredEngines.map(e => e.id))}`); // Optional: Log full list if needed
 
     return filteredEngines;
     
-  }, [availableEngines, activeEngineLoadoutId, settings.engines?.loadouts, loading]); // Dependencies reflect this logic
+  }, [fetchedEngines, activeEngineLoadoutId, settings.engines?.loadouts, loading]); // Dependencies reflect this logic
 
   // Map engine's primary category to a display name
   const getDisplayCategoryName = (engine: Engine): string => {
@@ -182,7 +183,7 @@ export function EnginesSettings({ }: EnginesSettingsProps) {
     const currentActiveId = activeEngineLoadoutId ?? 'starter';
     if (currentActiveId === 'starter') {
       // Return the synthesized starter config
-      return availableEngines.map(engine => ({
+      return fetchedEngines.map(engine => ({
         ...engine,
         enabled: engine.id === 'google',
         weight: 1.0,
@@ -194,7 +195,7 @@ export function EnginesSettings({ }: EnginesSettingsProps) {
       const savedLoadout = settings.engines?.loadouts?.find(l => l.id === currentActiveId);
       // Merge with availableEngines for potentially new/updated properties
       const loadoutConfig = savedLoadout?.config || [];
-      return availableEngines.map(availableEngine => {
+      return fetchedEngines.map(availableEngine => {
         const engineFromLoadout = loadoutConfig.find(le => String(le.id) === String(availableEngine.id));
         return {
           ...availableEngine,
@@ -257,7 +258,7 @@ export function EnginesSettings({ }: EnginesSettingsProps) {
       return;
     }
     const currentActiveId = activeEngineLoadoutId;
-    const engineToAdd = availableEngines.find(e => e.id === engineId);
+    const engineToAdd = fetchedEngines.find(e => e.id === engineId);
 
     if (!engineToAdd) {
       console.error("Engine to add not found in availableEngines:", engineId);
@@ -372,7 +373,7 @@ export function EnginesSettings({ }: EnginesSettingsProps) {
   // <<< REFACTORED: Function to actually create the loadout after getting name >>>
   const confirmAddLoadout = (newName: string) => {
     // <<< ADDED: Check if settings structure is ready and availableEngines exist >>>
-    if (!settings?.engines || !availableEngines || availableEngines.length === 0) {
+    if (!settings?.engines || !fetchedEngines || fetchedEngines.length === 0) {
       setAlertDialogContent({ 
         title: "Error", 
         description: "Cannot add loadout: Settings or available engines list not ready. Please wait or reload."
@@ -489,6 +490,26 @@ export function EnginesSettings({ }: EnginesSettingsProps) {
     console.log(`[Settings Display Debug] Found ${socialEnginesInConfig.length} social media engines directly in activeConfig.`);
   }, [activeConfig]);
 
+  // Memoize loadouts including the static ones for the manager
+  const allEngineLoadouts = useMemo(() => {
+    const userLoadouts = settings.engines?.loadouts?.filter(l => l.id !== 'starter' && l.id !== 'sl-ai') || [];
+    // Manually construct the starter and AI loadouts with the correct type and isLocked property
+    const starterLoadout: EngineLoadout = {
+      id: 'starter',
+      name: 'Starter',
+      config: [], // Actual config is handled separately
+      isLocked: true
+    };
+    const aiLoadout: EngineLoadout = {
+      id: 'sl-ai',
+      name: 'AI Dynamic Search',
+      config: [], // Config is dynamically determined
+      isLocked: true
+    };
+    // Combine starter, AI, and user loadouts
+    return [starterLoadout, aiLoadout, ...userLoadouts];
+  }, [settings.engines?.loadouts]);
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -510,17 +531,17 @@ export function EnginesSettings({ }: EnginesSettingsProps) {
               Add Loadout
             </Button>
           </div>
-          <LoadoutManager
+          <LoadoutManager<Engine[]> // Specify Engine[] type
             type="engines"
-            loadouts={displayLoadouts}
-            activeLoadoutId={activeEngineLoadoutId ?? 'starter'}
-            currentConfig={activeConfig} // <<< MODIFIED: Pass activeConfig >>>
-            availableEngineDefs={availableEngines}
-            onSaveLoadout={(name, config) => saveLoadout("engines", name, config)} // Keep save function
+            loadouts={allEngineLoadouts} // Pass the combined list
+            activeLoadoutId={activeEngineLoadoutId}
+            currentConfig={activeConfig} // Pass the current engine configuration
+            availableEngineDefs={fetchedEngines} // Pass available definitions if needed by manager
+            onSaveLoadout={(name, config) => saveLoadout("engines", name, config)}
             onSelectLoadout={(id) => selectLoadout("engines", id)}
             onDeleteLoadout={(id) => {
               // Find the loadout name for the confirmation message
-              const loadout = displayLoadouts.find(l => l.id === id);
+              const loadout = allEngineLoadouts.find(l => l.id === id);
               const loadoutName = loadout?.name || "this loadout";
               // Set content and action for confirmation dialog for ALL loadouts
               setAlertDialogContent({ 

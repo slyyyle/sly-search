@@ -195,13 +195,13 @@ export const appSettingsSchema = z.object({
   }).optional(),
   personalSources: z.object({
     sources: z.array(sourceListItemSchema).optional().default([
-      { id: "normal", label: "Web", icon: "Zap", color: "#176BEF", gradient: "from-[#176BEF]/70 to-[#FF3E30]/70" },
-      { id: "obsidian", label: "Obsidian", icon: "Brain", color: "#7E6AD7", gradient: "from-[#7E6AD7]/70 to-[#9C87E0]/70" },
-      { id: "localFiles", label: "Files", icon: "FileText", color: "#F7B529", gradient: "from-[#FF3E30]/70 to-[#F7B529]/70" },
-      { id: "ai", label: "AI", icon: "Bot", color: "#10B981", gradient: "from-[#10B981]/70 to-[#059669]/70" },
-      { id: "youtube", label: "YouTube", icon: "Youtube", color: "#FF0000", gradient: "from-[#FF0000]/70 to-[#CC0000]/70" },
-      { id: "music", label: "Music", icon: "Music", color: "#FF7700", gradient: "from-[#FF7700]/70 to-[#FF3300]/70" },
-      { id: "photos", label: "Photos", icon: "Image", color: "#3498DB", gradient: "from-[#3498DB]/70 to-[#2980B9]/70" },
+      { id: "web", label: "Web", icon: "Zap", color: "#176BEF", gradient: "themed-gradient-transparent" },
+      { id: "obsidian", label: "Obsidian", icon: "Brain", color: "#7E6AD7", gradient: "themed-gradient-transparent" },
+      { id: "localFiles", label: "Files", icon: "FileText", color: "#F7B529", gradient: "themed-gradient-transparent" },
+      { id: "ai", label: "AI", icon: "Bot", color: "#10B981", gradient: "themed-gradient-transparent" },
+      { id: "youtube", label: "YouTube", icon: "Youtube", color: "#FF0000", gradient: "themed-gradient-transparent" },
+      { id: "music", label: "Music", icon: "Music", color: "#FF7700", gradient: "themed-gradient-transparent" },
+      { id: "photos", label: "Photos", icon: "Image", color: "#3498DB", gradient: "themed-gradient-transparent" },
     ]),
     loadouts: z.array(loadoutSchema(z.array(sourceListItemSchema))).optional(),
     obsidian: obsidianSourceConfigSchema,
@@ -212,13 +212,23 @@ export const appSettingsSchema = z.object({
     photos: photosSourceConfigSchema,
     web: webSourceConfigSchema, // Add web config
   }).optional(),
+  waveRacer: z.object({
+    // We'll add specific settings here later
+  }).optional(),
 });
 
 // Infer the AppSettings type from the Zod schema
 export type AppSettings = z.infer<typeof appSettingsSchema>;
 
 // Define specific loadout types using the generic schema and inferred config types
-export type EngineLoadout = z.infer<ReturnType<typeof loadoutSchema<typeof engineSchema>>>;
+export const engineLoadoutSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  config: z.array(engineSchema),
+  isLocked: z.boolean().optional(), // Add optional isLocked flag
+});
+export type EngineLoadout = z.infer<typeof engineLoadoutSchema>;
+
 export type SourceLoadout = z.infer<ReturnType<typeof loadoutSchema<typeof sourceListItemSchema>>>;
 
 // Export individual config types if needed elsewhere

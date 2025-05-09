@@ -13,7 +13,7 @@ export async function GET() {
   <Tags>search engine web</Tags>
   <Contact>admin@example.com</Contact>
   <Url type="text/html" 
-       template="${baseUrl}/search?q={searchTerms}"/>
+       template="${baseUrl}/search-redirect?q={searchTerms}"/>
   <Url type="application/opensearchdescription+xml"
        rel="self"
        template="${baseUrl}/api/opensearch"/>

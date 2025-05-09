@@ -1,125 +1,145 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+'use client';
 
-interface Message {
-  sender: 'user' | 'bot';
-  text: string;
-}
+import React, { useState, useRef, useEffect, useCallback, FormEvent } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { ArrowUp, Loader2 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Terminal } from "lucide-react"
 
 export function ChatInterface() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const initialMessageFromQuery = searchParams.get('initialMessage');
+  const [inputQuery, setInputQuery] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [currentInput, setCurrentInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [isLoadingAISelect, setIsLoadingAISelect] = useState(false);
+  const [aiSelectError, setAiSelectError] = useState<string | null>(null);
 
-  const sendMessage = useCallback(async (messageText: string) => {
-    if (!messageText.trim()) return;
+  useEffect(() => {
+    const initialQuery = searchParams?.get('q') || '';
+    setInputQuery(initialQuery);
+    textareaRef.current?.focus();
+  }, [searchParams]);
 
-    setError(null);
-    setIsLoading(true);
+  const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputQuery(event.target.value);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  };
 
-    setMessages(prev => [...prev, { sender: 'user', text: messageText }]);
-
+  async function getAIDynamicEngines(query: string): Promise<string[]> {
     try {
-      const response = await fetch('/api/v1/chat', {
+      const response = await fetch('http://localhost:8000/api/v1/engines/select', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: messageText }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: query })
       });
 
       if (!response.ok) {
-        let errorDetail = `Error: ${response.status}`;
-        try {
-            const errorData = await response.json();
-            errorDetail = errorData.detail || errorDetail;
-        } catch (jsonError) {
-            console.warn("Could not parse error response as JSON");
-        }
-        throw new Error(errorDetail);
+        const errorData = await response.json().catch(() => ({ message: 'Failed to select engines' }));
+        console.error('Engine selection API error:', response.status, errorData);
+        throw new Error(errorData.message || 'Failed to fetch engine suggestions');
       }
 
       const data = await response.json();
-      setMessages(prev => [...prev, { sender: 'bot', text: data.response }]);
-      setCurrentInput('');
+      if (!data.selected_engines || !Array.isArray(data.selected_engines)) {
+        console.error('Invalid response format from engine selection API:', data);
+        throw new Error('Received invalid engine suggestions format');
+      }
+      return data.selected_engines;
+    } catch (error) {
+      console.error('Error calling getAIDynamicEngines:', error);
+      throw error instanceof Error ? error : new Error('An unknown error occurred during engine selection');
+    }
+  }
 
-    } catch (err: any) {
-      console.error("Chat API Error:", err);
-      setError(err.message || 'Failed to fetch response from the chatbot.');
-      setMessages(prev => [...prev, { sender: 'bot', text: `Error: ${err.message}` }]);
+  const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const query = inputQuery.trim();
+    if (!query || isLoadingAISelect) return;
+
+    setIsLoadingAISelect(true);
+    setAiSelectError(null);
+
+    try {
+      console.log(`Calling getAIDynamicEngines for query: ${query}`);
+      const selectedEngines = await getAIDynamicEngines(query);
+      console.log(`Received engines: ${selectedEngines.join(', ')}`);
+
+      if (selectedEngines.length === 0) {
+         throw new Error("No suitable search engines found for this query.");
+      }
+
+      const searchUrlParams = new URLSearchParams();
+      searchUrlParams.set('q', query);
+      searchUrlParams.set('source', 'web');
+      searchUrlParams.set('pageno', '1');
+      searchUrlParams.set('engines', selectedEngines.join(','));
+      router.push(`/search?${searchUrlParams.toString()}`);
+
+    } catch (error) {
+      console.error('Error during AI engine selection or navigation:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred.';
+      setAiSelectError(`Error: ${errorMessage}`);
     } finally {
-      setIsLoading(false);
+      setIsLoadingAISelect(false);
     }
-  }, []);
-
-  useEffect(() => {
-    if (initialMessageFromQuery && messages.length === 0) {
-      sendMessage(initialMessageFromQuery);
-    }
-  }, [initialMessageFromQuery, sendMessage, messages.length]);
-
-  useEffect(() => {
-    const scrollElement = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
-    if (scrollElement) {
-        scrollElement.scrollTop = scrollElement.scrollHeight;
-    }
-  }, [messages]);
-
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setCurrentInput(event.target.value);
   };
 
-  const handleSendClick = () => {
-    sendMessage(currentInput);
-  };
-
-  const handleInputKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter' && !isLoading) {
-      sendMessage(currentInput);
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      event.currentTarget.form?.requestSubmit();
     }
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-150px)] max-w-4xl mx-auto p-4">
-      <h2 className="text-xl font-semibold mb-4">AI Chat</h2>
-      <ScrollArea className="flex-grow mb-4 border rounded-md p-3" ref={scrollAreaRef}>
-        {messages.map((msg, index) => (
-          <div key={index} className={`mb-2 p-2 rounded-lg ${ 
-            msg.sender === 'user' ? 'bg-blue-900/70 ml-auto max-w-[80%]' : 'bg-gray-700/70 mr-auto max-w-[80%]' 
-          }`}> 
-            <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-100px)] w-full px-4">
+      <div className="w-full max-w-2xl">
+        <form onSubmit={handleFormSubmit} className="relative flex flex-col w-full">
+           {isLoadingAISelect && (
+             <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 flex items-center space-x-2 p-2 bg-background/80 backdrop-blur-sm rounded-md border border-border/50">
+               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+               <span className="text-sm text-muted-foreground">Finding best search engines...</span>
+             </div>
+           )}
+          
+           {aiSelectError && (
+             <Alert variant="destructive" className="mb-4 bg-destructive/10 border-destructive/30 text-destructive">
+                <Terminal className="h-4 w-4" />
+               <AlertTitle>Search Error</AlertTitle>
+               <AlertDescription>
+                 {aiSelectError}
+               </AlertDescription>
+             </Alert>
+           )}
+
+          <div className="relative flex items-end w-full p-2 border rounded-lg shadow-sm bg-background focus-within:ring-1 focus-within:ring-ring">
+            <Textarea
+              ref={textareaRef}
+              value={inputQuery}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask a question or type a search query..."
+              className="flex-1 resize-none border-none focus:ring-0 focus:outline-none bg-transparent max-h-48 min-h-[40px] text-base leading-relaxed pr-12 py-2 scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent"
+              rows={1}
+              disabled={isLoadingAISelect}
+            />
+            <Button
+              type="submit"
+              size="icon"
+              className="absolute right-3 bottom-2 h-8 w-8"
+              disabled={!inputQuery.trim() || isLoadingAISelect}
+            >
+              <ArrowUp className="h-5 w-5" />
+              <span className="sr-only">Submit Search</span>
+            </Button>
           </div>
-        ))}
-        {isLoading && (
-          <div className="flex justify-center items-center p-2">
-             <span className="animate-pulse text-muted-foreground">... ...</span>
-          </div>
-        )}
-         {error && (
-             <div className="text-red-500 text-center p-2">{error}</div>
-         )}
-      </ScrollArea>
-      <div className="flex space-x-2">
-        <Input
-          type="text"
-          placeholder="Ask the AI..."
-          value={currentInput}
-          onChange={handleInputChange}
-          onKeyPress={handleInputKeyPress}
-          disabled={isLoading}
-          className="flex-grow"
-        />
-        <Button onClick={handleSendClick} disabled={isLoading || !currentInput.trim()}>
-          {isLoading ? 'Sending...' : 'Send'}
-        </Button>
+        </form>
       </div>
     </div>
   );

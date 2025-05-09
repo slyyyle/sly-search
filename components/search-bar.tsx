@@ -49,7 +49,7 @@ export function SearchBar({
         value={query}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
-        className="pl-10 py-6 text-lg bg-background/60 google-gradient-border" // Kept styling
+        className="pl-10 py-6 text-lg bg-background/60 themed-gradient-border" // Kept styling
       />
       {/* Hint can be added conditionally or via prop if needed */}
       {/* <div className="absolute inset-y-0 right-0 flex items-center pr-3 text-sm search-hint">

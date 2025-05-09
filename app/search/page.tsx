@@ -43,6 +43,7 @@ interface SearchResultsState {
   searchResults: SearchResultItem[];
   source: string; // 'obsidian', 'web', 'youtube', etc.
   query?: string;
+  category?: string; // <<< ADDED CATEGORY
   pagination?: any; // Keep existing pagination structure for web
   total_results?: number; // <<< Add total_results for YouTube
   currentPage?: number; // <<< Add currentPage for YouTube
@@ -56,6 +57,13 @@ interface SearchResultsState {
   number_of_results?: number;
 }
 
+// +++ Define type for SLAI config from sessionStorage +++
+interface SlaiConfig {
+  query: string;
+  engineSets: { category: string; engines: string[] }[];
+  initialCategory: string;
+}
+
 export default function SearchPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -67,7 +75,7 @@ export default function SearchPage() {
 
   // Values derived directly from URL for consistency - DO THIS OUTSIDE useEffect/useCallback
   const initialQuery = searchParams.get("q") || "";
-  const initialSource = searchParams.get("source") || "normal";
+  const initialSource = searchParams.get("source") || "web"; // <<< CHANGED default from normal
   const initialPage = parseInt(searchParams.get("pageno") || "1", 10);
   const initialCategory = searchParams.get("category") || ""; // <<< Extract category
   const initialEngines = searchParams.get("engines"); // <<< Extract engines (can be null)
@@ -82,6 +90,7 @@ export default function SearchPage() {
   const [knowledgeSource, setKnowledgeSource] = useState(initialSource);
   // Loading and results state
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
   const [results, setResults] = useState<SearchResultsState | null>(null);
   // State synced with URL 'category' param
   const [activeTab, setActiveTab] = useState<string>(initialCategory); // <<< Initialize with initialCategory 
@@ -100,20 +109,17 @@ export default function SearchPage() {
   // Track the highest page number we've seen (for pagination)
   const [highestPageSeen, setHighestPageSeen] = useState<number>(1);
 
+  // +++ State for SLAI Config +++
+  const [slaiConfig, setSlaiConfig] = useState<SlaiConfig | null>(null);
+
   console.log("SearchPage rendering, availableEngines:", availableEngines);
   console.log("Current searchParams:", searchParams.toString());
   console.log(`Initial values derived: Query='${initialQuery}', Source='${initialSource}', Category='${initialCategory}', Engines='${initialEngines}'`);
 
-  // +++ MOVED: Determine apiSource before useMemo +++
-  const apiSource = useMemo(() => 
-    knowledgeSource === 'normal' ? 'web' : knowledgeSource, 
-    [knowledgeSource]
-  );
-
   // Determine the initial view based on settings, defaulting to 'list'
   const getInitialWebView = useCallback((): 'list' | 'card' => {
     // Use the specific setting for web view default
-    if (!isInitialLoadComplete || knowledgeSource !== 'normal' || !settings?.personalSources?.web?.defaultWebView) {
+    if (!isInitialLoadComplete || knowledgeSource !== 'web' || !settings?.personalSources?.web?.defaultWebView) { // <<< CHANGED from normal
       return 'list'; // Default if settings not loaded, not web search, or prop missing
     }
     // Directly return the validated setting value ('list' or 'card')
@@ -143,8 +149,24 @@ export default function SearchPage() {
       console.warn("[getFilteredEngineStringForCategory] Prerequisites not met.");
       return null;
     }
-
-           const currentActiveId = activeEngineLoadoutId ?? 'starter';
+    // +++ If SLAI config is active, use its engines for the target category +++
+    if (slaiConfig) {
+      const matchingSet = slaiConfig.engineSets.find(set => set.category === targetCategory);
+      if (matchingSet && matchingSet.engines.length > 0) {
+        console.log(`[getFilteredEngineStringForCategory - SLAI] Using engines for category '${targetCategory}':`, matchingSet.engines);
+        return matchingSet.engines.join(',');
+      } else {
+        console.warn(`[getFilteredEngineStringForCategory - SLAI] No engines found in SLAI config for category '${targetCategory}'. Falling back or returning null.`);
+        // Fallback for SLAI: if the specific category has no engines in the set,
+        // we might return null (to search all in that category from SLAI engines) or a broader set.
+        // For now, let's return null, which might mean no engines if not handled by caller.
+        // Or, return ALL slai engines if category not found?
+        // Let's be strict: if category set exists but is empty, or set not found, return null.
+        return null; 
+      }
+    }
+    // --- Existing non-SLAI logic ---
+    const currentActiveId = activeEngineLoadoutId ?? 'starter';
     let loadoutConfig: Engine[] = [];
 
     // Determine loadoutConfig (starter vs saved)
@@ -186,11 +208,20 @@ export default function SearchPage() {
 
   // Use useCallback for handleSearch - REVISED FOR SERVER-SIDE PAGINATION
   const handleSearch = useCallback(async (pageToFetch: number = 1, isSubmitEvent: boolean = false) => {
-    console.log(`handleSearch (Server-Side): Called. Query='${initialQuery}', Category='${initialCategory}', Engines='${initialEngines}', Page='${pageToFetch}'`);
+    console.log(`[handleSearch ENTERED] Page: ${pageToFetch}, isSubmit: ${isSubmitEvent}, ActiveTab: ${activeTab}`);
+    console.log(`[handleSearch Check] isFetching=${isFetching}, isInitialLoadComplete=${isInitialLoadComplete}, initialQuery='${initialQuery.trim()}'`); // Log conditions
 
+    if (isFetching) {
+        console.log("[handleSearch] Aborting, another fetch is already in progress."); 
+        return; 
+    }
     if (!isInitialLoadComplete) { console.log("handleSearch: Aborting, initial settings load not complete."); return; }
-    if (!initialQuery.trim()) { console.log("handleSearch: Aborting, initial query is empty."); return; }
+    
+    // --- MODIFIED: Ensure initialQuery is used, especially for SLAI where input field might not be primary ---
+    const currentQuery = slaiConfig?.query || initialQuery; // Use SLAI query if available
+    if (!currentQuery.trim()) { console.log("handleSearch: Aborting, query is empty."); return; }
 
+    setIsFetching(true);
     setIsLoading(true); setError(null); setUsingMockData(false);
     
     // Only reset states on a new search (submit), not when navigating to page 1 of existing search
@@ -209,20 +240,38 @@ export default function SearchPage() {
       let resultsPerPage: number = 10;
       let openNewTab: boolean = true; // Default value
 
-      if (apiSource === 'web') { 
+      if (knowledgeSource === 'web') { 
          resultsPerPage = settings?.personalSources?.web?.resultsPerPage ?? 10;
          openNewTab = settings?.personalSources?.web?.openNewTab ?? true; // Read from web config
       }
-      else if (validSourceKeys.includes(apiSource as SourceConfigKey)) { 
-         const typedApiSource = apiSource as SourceConfigKey;
+      else if (validSourceKeys.includes(knowledgeSource as SourceConfigKey)) { 
+         const typedApiSource = knowledgeSource as SourceConfigKey;
          const sourceConfig = settings?.personalSources?.[typedApiSource]; 
          resultsPerPage = sourceConfig?.resultsPerPage ?? 10;
          openNewTab = (sourceConfig as any)?.openNewTab ?? true; // Read from specific source config (use 'as any' for now to bypass potential typing issues across different source configs)
       } 
       resultsPerPage = resultsPerPage > 0 ? resultsPerPage : 10;
-      console.log(`Using resultsPerPage: ${resultsPerPage}, openNewTab: ${openNewTab} for source: ${apiSource}`);
+      console.log(`Using resultsPerPage: ${resultsPerPage}, openNewTab: ${openNewTab} for source: ${knowledgeSource}`);
       // --- End source-specific settings determination --- 
       
+      // --- Determine engines string ---
+      let enginesString: string | null = null;
+      if (slaiConfig) {
+        const categorySet = slaiConfig.engineSets.find(set => set.category === activeTab);
+        if (categorySet && categorySet.engines.length > 0) {
+          enginesString = categorySet.engines.join(',');
+          console.log(`[handleSearch - SLAI] Using engines for tab '${activeTab}': ${enginesString}`);
+        } else {
+          console.warn(`[handleSearch - SLAI] No engines in SLAI config for active tab '${activeTab}'. No engines will be passed.`);
+          // Optionally, could fall back to all SLAI engines if no specific set for tab:
+          // enginesString = slaiConfig.engineSets.flatMap(s => s.engines).join(',');
+        }
+      } else if (knowledgeSource === 'web') { // Only try to get loadout engines for web source if not SLAI
+        enginesString = getFilteredEngineStringForCategory(activeTab || 'general'); // Use activeTab or default
+        console.log(`[handleSearch - Non-SLAI] Using engines from loadout for tab '${activeTab || 'general'}': ${enginesString}`);
+      }
+      // --- End determining engines string ---
+
       const safeSearch = settings?.general?.safeSearch || "0";
       const language = settings?.general?.defaultLanguage || "all";
       // const openNewTabGeneral = settings.general?.openNewTab !== false; // <<< REMOVED general reading
@@ -230,10 +279,10 @@ export default function SearchPage() {
 
       // +++ Logging before appending parameters +++
       console.log(`[handleSearch: Params Start] Initial URL: ${searchUrl.toString()}`);
-      console.log(`[handleSearch: Params Append] Appending q: '${initialQuery}'`);
-      searchUrl.searchParams.append("q", initialQuery);
-      console.log(`[handleSearch: Params Append] Appending source: '${apiSource}'`);
-      searchUrl.searchParams.append("source", apiSource);
+      console.log(`[handleSearch: Params Append] Appending q: '${currentQuery}'`); // Use currentQuery
+      searchUrl.searchParams.append("q", currentQuery); // Use currentQuery
+      console.log(`[handleSearch: Params Append] Appending source: '${knowledgeSource}'`);
+      searchUrl.searchParams.append("source", knowledgeSource);
       console.log(`[handleSearch: Params Append] Appending pageno: ${pageToFetch}`);
       searchUrl.searchParams.append("pageno", pageToFetch.toString());
       console.log(`[handleSearch: Params Append] Appending results: ${resultsPerPage}`);
@@ -245,25 +294,35 @@ export default function SearchPage() {
         console.log(`[handleSearch: Params Append] Appending language: ${language}`);
         searchUrl.searchParams.append("language", language); 
       }
-      if (apiSource === 'web' && initialCategory && initialCategory !== "none") { 
-        console.log(`[handleSearch: Params Append] Appending category: ${initialCategory}`);
-        searchUrl.searchParams.append("category", initialCategory); 
+      // --- MODIFIED: Category and Engines appending ---
+      if (activeTab && activeTab !== "none") {
+        console.log(`[handleSearch: Params Append] Appending category: ${activeTab}`);
+        searchUrl.searchParams.append("category", activeTab);
       }
-      console.log(`[handleSearch: Params Append] Appending results_on_new_tab: ${openNewTab ? "1" : "0"}`);
-      searchUrl.searchParams.append("results_on_new_tab", openNewTab ? "1" : "0"); // <<< Use source-specific value
+
+      if (enginesString) {
+        console.log(`[handleSearch: Params Append] Appending engines: ${enginesString}`);
+        searchUrl.searchParams.append("engines", enginesString);
+      } else {
+        // If enginesString is null (e.g., SLAI category had no engines, or non-SLAI category in loadout had no engines)
+        // and it's a web search, we might not want to send an empty 'engines=' param.
+        // SearXNG might default to all engines if 'engines' is not provided.
+        // For SLAI, if a category has no engines, it effectively means "search with no engines for this tab",
+        // which should result in no results for that specific API call.
+        // If it's a non-SLAI web search and getFilteredEngineStringForCategory returns null,
+        // it means no engines in the loadout support that category.
+        console.log(`[handleSearch: Params Append] No specific engines to append for this request.`);
+      }
+      // --- End MODIFIED: Category and Engines appending ---
       
       if (settings?.privacy?.proxyImages !== undefined) { 
         const proxyValue = settings.privacy.proxyImages ? "true" : "false";
         console.log(`[handleSearch: Params Append] Appending image_proxy: ${proxyValue}`);
         searchUrl.searchParams.append("image_proxy", proxyValue);
       }
-      if (apiSource === 'web' && settings?.general?.ragEnabled) { 
+      if (knowledgeSource === 'web' && settings?.general?.ragEnabled) { 
         console.log(`[handleSearch: Params Append] Appending rag: enabled`);
         searchUrl.searchParams.append("rag", "enabled"); 
-      }
-      if (apiSource === 'web' && initialEngines) { 
-        console.log(`[handleSearch: Params Append] Appending engines: ${initialEngines}`);
-        searchUrl.searchParams.append("engines", initialEngines); 
       }
 
       const finalSearchUrl = searchUrl.toString();
@@ -288,8 +347,9 @@ export default function SearchPage() {
         if (pageToFetch === 1) {
           setResults({
             searchResults: [],
-            source: data.source || apiSource,
-            query: initialQuery,
+            source: data.source || knowledgeSource,
+            query: currentQuery,
+            category: activeTab,
           });
           setIsLoading(false);
           return;
@@ -301,7 +361,7 @@ export default function SearchPage() {
         // Show a toast notification
         toast({
           title: "End of results",
-          description: `You've reached the last page of results for "${initialQuery}"`,
+          description: `You've reached the last page of results for "${currentQuery}"`,
           duration: 3000,
         });
         
@@ -314,8 +374,9 @@ export default function SearchPage() {
       // --- Store results directly --- 
       setResults({
           searchResults: data.results || [], // Store standard results
-          source: data.source || apiSource,
-          query: initialQuery,
+          source: data.source || knowledgeSource,
+          query: currentQuery,
+          category: activeTab,
           total_results: data.total_results ?? data.number_of_results, // Use API's total count
           currentPage: pageToFetch, // Store the page number we requested
           nonCriticalErrors: data.errors || [], 
@@ -331,13 +392,15 @@ export default function SearchPage() {
       setMaxTotalResults(prev => Math.max(prev, data.number_of_results || 0));
 
     } catch (err: any) {
-      console.error("Search failed:", err);
+      console.error("Search Error in handleSearch:", err);
       setError(err.message || "Failed to fetch search results.");
-      setResults(null);
+      // Clear results on error?
+      setResults(null); 
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Keep isLoading for UI feedback
+      setIsFetching(false);
     }
-  }, [apiSource, isInitialLoadComplete, settings, initialQuery, initialCategory, initialEngines, toast]); // Add toast to dependencies
+  }, [initialQuery, initialEngines, isInitialLoadComplete, settings, availableEngines, activeEngineLoadoutId, knowledgeSource, isFetching, slaiConfig, activeTab, getFilteredEngineStringForCategory, router]);
 
   // --- Effect to Synchronize State FROM URL ---
   // <<< Updated dependencies: Use initial values, remove searchParams >>>
@@ -370,35 +433,62 @@ export default function SearchPage() {
 
   }, [initialQuery, initialCategory, initialSource, initialPage, knowledgeSource, currentPage]); // <<< REMOVED activeTab, inputValue
 
-  // --- Main Search Trigger Effect (Runs on relevant initial value changes) ---
-  // <<< Updated dependencies: Use initial values, keep handleSearch >>>
+  // --- REVISED Main Search Trigger Effect --- 
   useEffect(() => {
-    // +++ Add logging for search effect trigger +++
-    console.log(`[Search Effect Run] Dependencies changed. Values: isInitialLoadComplete=${isInitialLoadComplete}, initialQuery='${initialQuery}', initialSource='${initialSource}', initialCategory='${initialCategory}', initialEngines='${initialEngines ?? 'null'}'`);
+    console.log("[Search Effect RUNNING] Replaces old Search Effect and SLAI Trigger Effect");
+    
+    // Log dependency values *as seen by this effect run*
+    console.log(`[Search Effect Deps] isInitialLoadComplete=${isInitialLoadComplete}, initialQuery='${initialQuery}', initialSource='${initialSource}', initialCategory='${initialCategory}', initialEngines='${initialEngines ?? 'null'}', initialPage=${initialPage}`);
+    console.log(`[Search Effect Deps] slaiConfig loaded: ${!!slaiConfig}, results loaded: ${!!results}`);
 
-    if (!initialSearchPerformed.current && !initialQuery) {
-      console.log("[Search Effect] Initial load, no query. Setting initialSearchPerformed=true and returning.");
-      initialSearchPerformed.current = true; 
+    if (!isInitialLoadComplete) {
+      console.log("[Search Effect] Waiting for initial settings load.");
+      return; // Wait for settings
+    }
+
+    const isSlaimode = searchParams.get('slai_session') === 'true';
+    
+    // If it's an SLAI session, but the config hasn't loaded yet, wait.
+    if (isSlaimode && slaiConfig === null) {
+      console.log("[Search Effect] SLAI mode active, but slaiConfig not yet loaded from sessionStorage. Waiting...");
       return;
     }
 
-    console.log(
-        `[Search Effect Check] isInitialLoadComplete=${isInitialLoadComplete}, initialQuery="${initialQuery}", initialSource="${initialSource}", initialCategory="${initialCategory}", initialEngines="${initialEngines ?? 'null'}"`
-    );
-
-    if (isInitialLoadComplete && initialQuery.trim()) {
-      console.log(`[Search Effect] Conditions met. Triggering handleSearch(${initialPage})`); // <<< Use initialPage here
-      handleSearch(initialPage);
-      if (!initialSearchPerformed.current) { initialSearchPerformed.current = true; }
-    } else if (isInitialLoadComplete && !initialQuery.trim()) {
-       console.log("[Search Effect] Load complete, no query. Clearing results.");
-       setResults(null); // <<< Remove setAllFetchedResults
-       setIsLoading(false); setError(null);
-       if (!initialSearchPerformed.current) { initialSearchPerformed.current = true; }
-    } else {
-       console.log("[Search Effect] Waiting for initial load to complete...");
+    // If query is empty, clear results and stop.
+    if (!initialQuery.trim()) {
+       console.log("[Search Effect] Query is empty. Clearing results.");
+       setResults(null);
+       setIsLoading(false); 
+       setError(null);
+       return;
     }
-  }, [isInitialLoadComplete, initialQuery, initialSource, initialCategory, initialEngines, handleSearch]); // <<< Updated dependencies
+
+    // Check if current results match the parameters derived from the URL/SLAI config
+    // Note: For SLAI, initialQuery might differ from slaiConfig.query if user navigates back/fwd weirdly, but usually they align.
+    // We compare against initialQuery/initialCategory from URL params as the source of truth for the desired state.
+    const resultsMatchCurrentParams = results &&
+                                     results.query === initialQuery &&
+                                     results.source === initialSource &&
+                                     results.category === initialCategory;
+    
+    console.log(`[Search Effect Check] resultsMatchCurrentParams = ${resultsMatchCurrentParams} (Query Match: ${results?.query === initialQuery}, Source Match: ${results?.source === initialSource}, Category Match: ${results?.category === initialCategory})`);
+
+    // If results DON'T match the current params, trigger a new search for page 1
+    if (!resultsMatchCurrentParams) {
+        // Added check to prevent fetching if already fetching
+        if (isFetching) {
+            console.log("[Search Effect] Skipping fetch because isFetching is true.");
+            return;
+        }
+        console.log(`[Search Effect] Triggering handleSearch(${initialPage}, true) because results don't match current URL params.`);
+        handleSearch(initialPage, true); // Use true for isSubmitEvent to reset results fully
+    } else {
+        console.log("[Search Effect] Results already match current URL params. Skipping fetch.");
+    }
+
+  // Dependencies: Include all external values read by the effect.
+  // isFetching is added to prevent re-triggering based on its change if fetch was skipped.
+  }, [isInitialLoadComplete, initialQuery, initialSource, initialCategory, initialEngines, initialPage, slaiConfig, results, handleSearch, searchParams, isFetching]); // Added slaiConfig, results, searchParams, isFetching
 
   // --- Pagination Handlers --- REVISED FOR SERVER-SIDE --- 
   const handlePreviousPage = () => {
@@ -452,7 +542,7 @@ export default function SearchPage() {
     // Keep pagination hidden when no results
   } else {
     // Get RPP based on current source (same as before)
-    const currentSource = results?.source || apiSource;
+    const currentSource = results?.source || knowledgeSource;
     if (settings && currentSource) {
         if (currentSource === 'web') {
             resultsPerPageNum = parseInt(settings.personalSources?.web?.resultsPerPage?.toString() ?? '10', 10);
@@ -587,7 +677,7 @@ export default function SearchPage() {
       console.log(`[Tab Default/Reset Check] URL Category: '${currentUrlCategory}', Available: ${JSON.stringify(availableTabValues)}, Is Valid: ${isUrlCategoryValid}, Current State: '${activeTab}'`);
 
       // Condition 1: Web search active AND (URL category is NOT valid OR no URL category) AND tabs ARE available
-      if (knowledgeSource === 'normal' && !isUrlCategoryValid && availableTabs.length > 0) {
+      if (knowledgeSource === 'web' && !isUrlCategoryValid && availableTabs.length > 0) { // <<< CHANGED from normal
           // Determine the best default tab (prefer 'general', fallback to first)
           let defaultTabValue = availableTabs.some(tab => tab.value === 'general') ? 'general' : availableTabs[0].value;
           
@@ -598,16 +688,16 @@ export default function SearchPage() {
           }
       } 
       // Condition 2: Web search active but NO tabs are available
-      else if (knowledgeSource === 'normal' && availableTabs.length === 0) {
+      else if (knowledgeSource === 'web' && availableTabs.length === 0) { // <<< CHANGED from normal
            if (activeTab !== 'none') {
                console.log("[Tab Default/Reset] No available tabs for web search. Setting activeTab to 'none'.");
                setActiveTab('none');
            }
       }
       // Condition 3: Source is NOT web search (e.g., Obsidian, YouTube)
-      else if (knowledgeSource !== 'normal') {
+      else if (knowledgeSource !== 'web') { // <<< CHANGED from normal
           if (activeTab !== '') { // Use empty string to represent no tab for non-web sources
-               console.log(`[Tab Default/Reset] Source is not 'normal' ('${knowledgeSource}'). Clearing activeTab.`);
+               console.log(`[Tab Default/Reset] Source is not 'web' ('${knowledgeSource}'). Clearing activeTab.`); // <<< CHANGED from normal
                setActiveTab(''); 
           }
       }
@@ -623,7 +713,7 @@ export default function SearchPage() {
 
   // --- Update URL and Trigger Search on Tab Click --- 
   const handleTabChange = (newTab: string) => {
-    console.log(`handleTabChange: Switching to tab: ${newTab}`);
+    console.log(`[handleTabChange RUNNING] Switching to tab: ${newTab}`); // Log entry
     // setActiveTab(newTab); // State update happens via useEffect sync
 
     // Reset pagination state when changing tabs
@@ -636,7 +726,7 @@ export default function SearchPage() {
     // Convert 'web' tab value to 'general' category when getting filtered engines
     const categoryForFiltering = newTab === 'web' ? 'general' : newTab;
     const filteredEngines = getFilteredEngineStringForCategory(categoryForFiltering);
-    console.log(`handleTabChange: Calculated filteredEngines for category '${categoryForFiltering}': ${filteredEngines}`); // <<< Updated log message
+    console.log(`[handleTabChange] Calculated engines for '${categoryForFiltering}': ${filteredEngines}`); // <<< Updated log message
 
     // --- Update URL with new category AND filtered engines --- 
     const params = new URLSearchParams(searchParams.toString());
@@ -650,10 +740,11 @@ export default function SearchPage() {
     }
 
     const targetUrl = `/search?${params.toString()}`;
-    console.log(`handleTabChange: Navigating to URL: ${targetUrl}`); // <<< Log target URL
+    console.log(`[handleTabChange] Calling router.push with URL: ${targetUrl}`); // Log before push
 
     // Push the new URL - the search effect will pick up changes
     router.push(targetUrl);
+    console.log("[handleTabChange] router.push CALLED."); // Log after push
   };
 
   // Form submit handler - UPDATED to modify URL first
@@ -702,7 +793,7 @@ export default function SearchPage() {
 
   // --- Determine openInNewTab for SearchResults component --- 
   const openInNewTabForDisplay = useMemo(() => {
-     const currentDisplaySource = results?.source || apiSource;
+     const currentDisplaySource = results?.source || knowledgeSource; // <<< CHANGED from apiSource
      let openSetting = true; // Default
      if (currentDisplaySource === 'web') {
         openSetting = settings?.personalSources?.web?.openNewTab ?? true;
@@ -712,7 +803,74 @@ export default function SearchPage() {
      }
      console.log(`[Display Prop] Determined openInNewTab=${openSetting} for source='${currentDisplaySource}'`);
      return openSetting;
-  }, [results?.source, apiSource, settings]);
+  }, [results?.source, knowledgeSource, settings]); // <<< CHANGED from apiSource
+
+  // +++ useEffect to Detect SLAI Search and Load from sessionStorage +++
+  useEffect(() => {
+    if (searchParams.get('slai_session') === 'true') {
+      const storedConfig = sessionStorage.getItem('slaiSearchConfig');
+      if (storedConfig) {
+        try {
+          const parsedConfig = JSON.parse(storedConfig) as SlaiConfig;
+          console.log("[SearchPage] Loaded SLAI config from sessionStorage:", parsedConfig);
+          setSlaiConfig(parsedConfig);
+          setActiveTab(parsedConfig.initialCategory); // Set initial tab from SLAI config
+
+          // sessionStorage.removeItem('slaiSearchConfig'); // Remove after reading
+                                                      // Temporarily disable removal for easier debugging if page reloads.
+                                                      // Re-enable this for production.
+
+          // Clean the URL - remove slai_session param
+          const nextParams = new URLSearchParams(searchParams.toString());
+          nextParams.delete('slai_session');
+          // router.replace(`/search?${nextParams.toString()}`, { scroll: false }); // router.replace might be too aggressive and cause re-renders
+                                                                              // Consider just letting the param be, or use window.history.replaceState
+                                                                              // For now, let's not replace to avoid potential loops during dev
+          console.log("[SearchPage] SLAI session processed. Config set, initial tab set.");
+        } catch (e) {
+          console.error("[SearchPage] Error parsing SLAI config from sessionStorage:", e);
+          toast({ title: "Error", description: "Could not load AI search configuration.", variant: "destructive" });
+          setSlaiConfig(null); // Clear on error
+        }
+      } else {
+        console.warn("[SearchPage] slai_session=true but no config found in sessionStorage.");
+        // Potentially handle this - maybe show a message or revert to normal search
+        setSlaiConfig(null);
+      }
+    } else {
+      // Ensure slaiConfig is cleared if not an SLAI session (e.g., navigating back from SLAI to a normal search)
+      if (slaiConfig !== null) { // Only set if it's currently not null to avoid unnecessary re-renders
+          console.log("[SearchPage] Not an SLAI session or slai_session param removed, clearing SLAI config.");
+          setSlaiConfig(null);
+      }
+    }
+  }, [searchParams, router, toast]); // Added toast
+
+  // Effect to sync inputValue with initialQuery from URL (e.g., on back/forward navigation)
+  useEffect(() => {
+    if (initialQuery !== inputValue) {
+      setInputValue(initialQuery);
+    }
+  }, [initialQuery]); // Only sync input when initialQuery changes
+
+  // Effect to sync activeTab with URL or set default (MOVED AFTER displayTabs definition)
+  useEffect(() => {
+    // Prioritize slaiConfig.initialCategory if slaiConfig is present and activeTab is not yet set or doesn't match
+    if (slaiConfig && slaiConfig.initialCategory && (!activeTab || activeTab !== slaiConfig.initialCategory)) {
+      console.log(`[activeTab Sync] SLAI mode. Setting activeTab from slaiConfig.initialCategory: '${slaiConfig.initialCategory}'`);
+      setActiveTab(slaiConfig.initialCategory);
+    } else if (!slaiConfig && initialCategory) { // If not SLAI, and URL has category
+      console.log(`[activeTab Sync] Non-SLAI mode. Setting activeTab from URL initialCategory: '${initialCategory}'`);
+      setActiveTab(initialCategory);
+    } else if (!slaiConfig && !initialCategory && availableTabs.length > 0) { // If not SLAI, no URL category, but tabs exist
+      console.log(`[activeTab Sync] Non-SLAI mode. No URL category. Setting activeTab to first displayTab: '${availableTabs[0].value}'`);
+      setActiveTab(availableTabs[0].value);
+    } else if (!activeTab && availableTabs.length > 0) { // Fallback if activeTab somehow still not set
+        console.log(`[activeTab Sync] Fallback. Setting activeTab to first displayTab: '${availableTabs[0].value}'`);
+        setActiveTab(availableTabs[0].value);
+    }
+     // Add slaiConfig to dependencies.
+  }, [initialCategory, availableTabs, router, slaiConfig, activeTab]); // activeTab also added to see if it needs to be synced
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -739,11 +897,8 @@ export default function SearchPage() {
                 placeholder="Search the web..."
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                className="pl-9 py-2 bg-background/60 google-gradient-border"
+                className="pl-9 py-2 bg-background/60 themed-gradient-border"
               />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 text-xs search-hint">
-                Press Enter to Search
-              </div>
             </div>
           </form>
 
@@ -785,7 +940,7 @@ export default function SearchPage() {
         )}
 
         {/* Tabs and View Switcher Container */}
-        {knowledgeSource === 'normal' && ( // Only show for web source
+        {knowledgeSource === 'web' && ( // <<< CHANGED from normal // Only show for web source
           <div className="flex justify-between items-center mb-4">
             {/* Category Tabs */}
             {((): null => { // IIFE for logging within JSX
@@ -811,20 +966,20 @@ export default function SearchPage() {
             </Tabs>
 
             {/* <<< Conditionally Render View Switcher for NON-Web SOURCES >>> */}
-            {knowledgeSource !== 'normal' && (
+            {knowledgeSource !== 'web' && ( // <<< CHANGED from normal
               <ToggleGroup 
                 type="single" 
                 value={webResultsView} // This state might need refinement if different non-web sources need different defaults/views
                 onValueChange={(value: "list" | "card") => {
                   if (value) setWebResultsView(value); 
                 }}
-                className="bg-background/60 google-gradient-border p-0.5 rounded-md ml-4" // Added ml-4 for spacing
+                className="bg-background/60 themed-gradient-border p-0.5 rounded-md ml-4" // Added ml-4 for spacing
                 size="sm"
               >
-                <ToggleGroupItem value="list" aria-label="List view" className="rounded-sm data-[state=on]:bg-gradient-to-r from-[#176BEF]/70 to-[#FF3E30]/70 data-[state=on]:text-white">
+                <ToggleGroupItem value="list" aria-label="List view" className="rounded-sm data-[state=on]:themed-gradient-transparent data-[state=on]:text-white">
                   <List className="h-4 w-4" />
                 </ToggleGroupItem>
-                <ToggleGroupItem value="card" aria-label="Card view" className="rounded-sm data-[state=on]:bg-gradient-to-r from-[#176BEF]/70 to-[#FF3E30]/70 data-[state=on]:text-white">
+                <ToggleGroupItem value="card" aria-label="Card view" className="rounded-sm data-[state=on]:themed-gradient-transparent data-[state=on]:text-white">
                   <LayoutGrid className="h-4 w-4" />
                 </ToggleGroupItem>
               </ToggleGroup>

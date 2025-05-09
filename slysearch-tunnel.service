@@ -1,0 +1,14 @@
+[Unit]
+Description=Cloudflare Tunnel for SlySearch
+After=network.target
+
+[Service]
+Type=simple
+User=slyle
+WorkingDirectory=/home/slyle/Projects/sly_search/frontend
+ExecStart=/usr/bin/cloudflared tunnel --config /home/slyle/Projects/sly_search/frontend/cloudflared-config.yml run slysearch
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target 

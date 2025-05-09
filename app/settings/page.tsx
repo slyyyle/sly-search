@@ -13,6 +13,7 @@ import { PrivacySettings } from "@/components/settings/privacy-settings"
 import { AppearanceSettings } from "@/components/settings/appearance-settings"
 import { AdvancedSettings } from "@/components/settings/advanced-settings"
 import { PersonalSourcesSettings } from "@/components/settings/personal-sources-settings"
+import { WaveRacerSettings } from "@/components/settings/wave-racer-settings"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -135,7 +136,7 @@ export default function SettingsPage() {
 
             <Button
               onClick={handleSaveSettings}
-              className="google-gradient-border hover:bg-black"
+              className="themed-gradient-border hover:bg-black"
               disabled={!hasChanges || loading}
               size="sm"
             >
@@ -171,13 +172,14 @@ export default function SettingsPage() {
             <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab}>
               {/* Center the TabsList within the constrained div */}
               <div className="flex justify-center mb-6">
-                <TabsList className="bg-background/60 google-gradient-border inline-flex">
+                <TabsList className="bg-background/60 themed-gradient-border inline-flex">
                   <TabsTrigger value="general">Surf Lineup</TabsTrigger>
                   <TabsTrigger value="engines">Board Quiver</TabsTrigger>
                   <TabsTrigger value="privacy">Low Pro</TabsTrigger>
                   <TabsTrigger value="appearance">Wax & Decals</TabsTrigger>
                   <TabsTrigger value="advanced">Fins & Leash</TabsTrigger>
                   <TabsTrigger value="personalSources">Local Lagoon</TabsTrigger>
+                  <TabsTrigger value="waveRacer">Wave Racer</TabsTrigger>
                 </TabsList>
               </div>
 
@@ -199,6 +201,9 @@ export default function SettingsPage() {
               </TabsContent>
               <TabsContent value="personalSources">
                 <PersonalSourcesSettings settings={settings.personalSources} updateSetting={updateSetting} />
+              </TabsContent>
+              <TabsContent value="waveRacer">
+                <WaveRacerSettings settings={settings.waveRacer} updateSetting={updateSetting} />
               </TabsContent>
             </Tabs>
           </div>

@@ -23,36 +23,36 @@ const TheLocalLagoon: React.FC<TheLocalLagoonProps> = ({
   const { settings } = useSettings()
 
   const surfSources = settings.personalSources?.sources || [
-    { id: "normal", label: "Web", icon: "Zap", color: "#176BEF", gradient: "from-[#176BEF]/70 to-[#FF3E30]/70" },
+    { id: "web", label: "Web", icon: "Zap", color: "#176BEF", gradient: "themed-gradient-transparent" },
     {
       id: "obsidian",
       label: "Obsidian",
       icon: "Brain",
       color: "#7E6AD7",
-      gradient: "from-[#7E6AD7]/70 to-[#9C87E0]/70",
+      gradient: "themed-gradient-transparent",
     },
-    { id: "localFiles", label: "Files", icon: "FileText", color: "#F7B529", gradient: "from-[#FF3E30]/70 to-[#F7B529]/70" },
-    { id: "ai", label: "AI", icon: "Bot", color: "#10B981", gradient: "from-[#10B981]/70 to-[#059669]/70" },
+    { id: "localFiles", label: "Files", icon: "FileText", color: "#F7B529", gradient: "themed-gradient-transparent" },
+    { id: "ai", label: "AI", icon: "Bot", color: "#10B981", gradient: "themed-gradient-transparent" },
     {
       id: "youtube",
       label: "YouTube",
       icon: "Youtube",
       color: "#FF0000",
-      gradient: "from-[#FF0000]/70 to-[#CC0000]/70",
+      gradient: "themed-gradient-transparent",
     },
     {
       id: "music",
       label: "Music",
       icon: "Music",
       color: "#FF7700",
-      gradient: "from-[#FF7700]/70 to-[#FF3300]/70",
+      gradient: "themed-gradient-transparent",
     },
     {
       id: "photos",
       label: "Photos",
       icon: "Image",
       color: "#3498DB",
-      gradient: "from-[#3498DB]/70 to-[#2980B9]/70",
+      gradient: "themed-gradient-transparent",
     },
   ]
 
@@ -97,7 +97,7 @@ const TheLocalLagoon: React.FC<TheLocalLagoonProps> = ({
     return (
       <div
         className={cn(
-          "flex google-gradient-border rounded-md p-1",
+          "flex themed-gradient-border rounded-md p-1",
           compact ? "h-8" : "h-10",
           "min-w-fit w-auto",
         )}
@@ -106,7 +106,7 @@ const TheLocalLagoon: React.FC<TheLocalLagoonProps> = ({
         {surfSources.map((source) => {
           const isActive = value === source.id
           const Icon = getIconComponent(source.icon)
-          const displayGradient = source.gradient || "from-[#176BEF]/70 to-[#FF3E30]/70"
+          const displayGradient = source.gradient || "themed-gradient-transparent"
           const displayColor = source.color
 
           return (
@@ -138,7 +138,7 @@ const TheLocalLagoon: React.FC<TheLocalLagoonProps> = ({
   if (!selectedSource) return null;
 
   const TriggerIcon = getIconComponent(selectedSource.icon);
-  const triggerGradient = selectedSource.gradient || "from-[#176BEF]/70 to-[#FF3E30]/70";
+  const triggerGradient = selectedSource.gradient || "themed-gradient-transparent";
 
   return (
     <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
@@ -146,7 +146,7 @@ const TheLocalLagoon: React.FC<TheLocalLagoonProps> = ({
         <button
           type="button"
           className={cn(
-            "flex items-center justify-center google-gradient-border rounded-md p-1 transition-all duration-200 whitespace-nowrap w-full",
+            "flex items-center justify-center themed-gradient-border rounded-md p-1 transition-all duration-200 whitespace-nowrap w-full",
             compact ? "h-8 text-xs px-2" : "h-10 text-sm px-3",
             `bg-gradient-to-r ${triggerGradient}`
           )}
@@ -169,7 +169,7 @@ const TheLocalLagoon: React.FC<TheLocalLagoonProps> = ({
         {surfSources.map((source) => {
           const isActive = value === source.id
           const Icon = getIconComponent(source.icon)
-          const displayGradient = source.gradient || "from-[#176BEF]/70 to-[#FF3E30]/70"
+          const displayGradient = source.gradient || "themed-gradient-transparent"
           const displayColor = source.color
 
           return (

@@ -1,0 +1,9 @@
+tunnel: 1976bff2-514b-497a-9435-522c173d9228
+credentials-file: /home/slyle/.cloudflared/1976bff2-514b-497a-9435-522c173d9228.json
+ingress:
+  - hostname: slysearch.ai
+    service: http://localhost:3000
+    originRequest:
+      noTLSVerify: false
+      http2Origin: true
+  - service: http_status:404 

@@ -19,6 +19,7 @@ export interface WebResult extends BaseResult {
   content_type?: string; // MIME type
   favicon?: string;
   tags?: string[]; // Optional tags associated with the result
+  img_src?: string; // Optional: image URL for image engines
 }
 
 // Interface for Obsidian results
@@ -71,7 +72,7 @@ export interface InfoboxUrl {
 export interface InfoboxAttribute {
   label?: string; // Label might be optional
   value: string;
-  // Add other potential fields like image if needed based on SearXNG output
+  image?: { src: string; alt: string }[]; // Optional: images array per SearXNG docs
 }
 
 export interface Infobox {

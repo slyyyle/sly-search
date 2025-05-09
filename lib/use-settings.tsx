@@ -113,9 +113,9 @@ const defaultSettings: AppSettings = {
     debugMode: false,
   },
   engines: {
-    loadouts: [
-      { id: "starter", name: "Starter", config: [] }
-    ],
+    // User-saved loadouts start empty
+    loadouts: [],
+    // Default to starter loadout state
     activeLoadoutId: "starter",
   },
   privacy: {
@@ -132,7 +132,7 @@ const defaultSettings: AppSettings = {
   },
   appearance: {
     resultsLayout: "list",
-    theme: "cyberpunk",
+    theme: "google-original",
     centerAlignment: false,
     defaultLocale: "auto",
     hotkeys: "default",
@@ -188,7 +188,7 @@ const defaultSettings: AppSettings = {
   },
   personalSources: {
     sources: [
-        { id: "normal", label: "Web", icon: "Zap", color: "#176BEF", gradient: "from-[#176BEF]/70 to-[#FF3E30]/70" },
+        { id: "web", label: "Web", icon: "Zap", color: "#176BEF", gradient: "from-[#176BEF]/70 to-[#FF3E30]/70" },
         { id: "obsidian", label: "Obsidian", icon: "Brain", color: "#7E6AD7", gradient: "from-[#7E6AD7]/70 to-[#9C87E0]/70" },
         { id: "localFiles", label: "Files", icon: "FileText", color: "#F7B529", gradient: "from-[#FF3E30]/70 to-[#F7B529]/70" },
         { id: "ai", label: "AI", icon: "Bot", color: "#10B981", gradient: "from-[#10B981]/70 to-[#059669]/70" },
@@ -245,6 +245,9 @@ const defaultSettings: AppSettings = {
       searchOnCategory: true
     },
   },
+  waveRacer: {
+    // We'll add specific settings here later
+  },
 };
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
@@ -283,8 +286,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         if (validationResult.success) {
           loadedSettings = validationResult.data;
           loadedSource = "API";
-          localStorage.setItem("slysearch-settings", JSON.stringify(validationResult.data)); // Cache valid data
           console.log("Successfully loaded and validated settings from API:", loadedSettings);
+          console.log("[THEME DEBUG] Loaded appearance settings from API:", loadedSettings.appearance);
         } else {
           console.error("API data validation failed:", validationResult.error.errors);
           setError("Loaded settings from API are invalid. Using fallback.");
@@ -292,32 +295,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         }
 
       } catch (err: any) {
-        console.warn(`Initial load/validation failed (${err.message}). Attempting localStorage fallback...`);
-         const savedSettings = localStorage.getItem("slysearch-settings");
-         if (savedSettings) {
-             try {
-                 const parsedSettings = JSON.parse(savedSettings);
-            const validationResult = appSettingsSchema.safeParse(parsedSettings);
-            if (validationResult.success) {
-              loadedSettings = validationResult.data;
-              loadedSource = "localStorage";
-              console.log("Successfully loaded and validated settings from localStorage.");
-              // Optionally set error if API failed initially
-              if (err.message !== "API data validation failed") {
-                setError(`API Error (${err.message}): Using local backup.`);
-              }
-            } else {
-              console.error("localStorage data validation failed:", validationResult.error.errors);
-              setError("Stored settings in localStorage are invalid. Using defaults.");
-              localStorage.removeItem("slysearch-settings"); // Clear invalid data
-            }
-             } catch (e) {
-                 console.error("Failed to parse saved settings from localStorage:", e);
-            setError("Could not parse localStorage settings. Using defaults.");
-            localStorage.removeItem("slysearch-settings"); // Clear invalid data
-          }
-        }
-         // If no valid settings from API or localStorage, use defaults
+        console.warn(`Initial load/validation failed (${err.message}). Using defaults.`);
+
+        // If no valid settings from API (localStorage fallback removed), use defaults
         if (!loadedSettings) {
             setError(prevError => prevError || "Could not load settings. Using defaults."); // Preserve earlier error if relevant
         }
@@ -354,15 +334,30 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       const currentActiveId = finalSettings.engines!.activeLoadoutId;
       const savedLoadouts = finalSettings.engines!.loadouts;
       const isValidSavedId = savedLoadouts.some(l => l.id === currentActiveId);
-
-      if (!isValidSavedId && currentActiveId !== 'starter') {
+      // Allow locked loadouts 'starter' and 'sl-ai' even if not present in savedLoadouts
+      const lockedIds = ['starter', 'sl-ai'];
+      if (!isValidSavedId && !lockedIds.includes(currentActiveId || '')) {
         console.warn(`Invalid active engine loadout ID (${currentActiveId}) found during load. Resetting to 'starter'.`);
         finalSettings.engines!.activeLoadoutId = 'starter';
       } else {
-        console.log(`Initial active engine loadout ID set to: ${currentActiveId ?? "starter"}`);
+        console.log(`Initial active engine loadout ID set to: ${currentActiveId ?? 'starter'}`);
       }
 
       setSettings(finalSettings);
+
+      // ----> APPLY THEME DIRECTLY AFTER SETTINGS ARE FINALIZED <----
+      if (finalSettings.appearance?.theme) {
+        console.log("[THEME DEBUG USE_SETTINGS] Applying initial theme from loaded settings:", finalSettings.appearance.theme);
+        document.documentElement.dataset.theme = finalSettings.appearance.theme;
+        // Also update localStorage here to be sure it's in sync with the loaded setting
+        try {
+          localStorage.setItem('selected-theme', finalSettings.appearance.theme);
+        } catch (e) {
+          console.warn('Failed to set initial theme in localStorage from useSettings', e);
+        }
+      } else {
+        console.log("[THEME DEBUG USE_SETTINGS] No theme found in finalSettings.appearance, default will apply from ThemeSwitcher or CSS.");
+      }
 
       // Finalize loading state
       setLoading(false);
@@ -414,6 +409,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       // Handle top-level sections like 'general', 'privacy', etc.
       if (section !== "personalSources" && section !== "engines" && newSettings[section]) {
         (newSettings[section] as any)[key] = value;
+        if (section === "appearance" && key === "theme") {
+          console.log("[THEME DEBUG] updateSetting for appearance.theme with value:", value);
+        }
       } 
       // Handle personal source specific settings (e.g., obsidian.path)
       else if (section === "personalSources" && newSettings.personalSources && newSettings.personalSources[key as keyof AppSettings["personalSources"]]) {
@@ -448,6 +446,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     
     // Apply migration before saving to ensure newest structure
     const migratedSettings = migrateSettingsStructure(settings);
+    console.log("[THEME DEBUG] Settings object before stringify in saveSettings:", migratedSettings);
+    console.log("[THEME DEBUG] Appearance settings before stringify in saveSettings:", migratedSettings.appearance);
     
     let settingsJson: string;
     try {
@@ -567,7 +567,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const selectLoadout = useCallback((type: "engines" | "surf", id: string) => {
     if (type === "engines") {
       // Validate the ID before setting it
-      const isValid = id === "starter" || settings.engines?.loadouts?.some(l => l.id === id);
+      // Allow 'starter', 'sl-ai', or any ID present in the saved loadouts
+      const isValid = id === "starter" || id === "sl-ai" || settings.engines?.loadouts?.some(l => l.id === id);
       if (isValid) {
         console.log(`Setting active engine loadout ID to: ${id}`);
         updateSetting("engines", "activeLoadoutId", id);

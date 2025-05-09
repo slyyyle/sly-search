@@ -43,4 +43,4 @@ const ListResults: React.FC<ListResultsProps> = ({ results, openInNewTab = true 
   )
 }
 
-export default ListResults
+export default ListResults 
