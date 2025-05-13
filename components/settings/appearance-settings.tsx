@@ -211,7 +211,7 @@ export function AppearanceSettings({ settings, updateSetting }: AppearanceSettin
               <Label>Board Style</Label>
               <SettingsTooltip content="Select the visual theme for the application's gradients." />
             </div>
-            <div className="max-w-[200px] w-full">
+            <div className="w-auto">
               <ThemeSwitcher 
                 value={currentSettings.theme || 'google-original'} 
                 onThemeChange={(themeId) => updateSetting("appearance", "theme", themeId)}
@@ -323,8 +323,9 @@ export function AppearanceSettings({ settings, updateSetting }: AppearanceSettin
           {/* Enable Quick Links Switch */}
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="enable-quick-links">Enable Quick Links</Label>
-              <div className="text-sm text-muted-foreground">Display quick access tiles on your dashboard</div>
+              <Label htmlFor="enable-quick-links">Enable Quick Links
+                <SettingsTooltip content="Display quick access tiles on your dashboard" />
+              </Label>
             </div>
             <Switch
               id="enable-quick-links"
@@ -465,18 +466,8 @@ export function AppearanceSettings({ settings, updateSetting }: AppearanceSettin
               <div className="flex justify-end">
                 <Dialog open={isAddLinkOpen} onOpenChange={setIsAddLinkOpen}>
                   <DialogTrigger asChild>
-                    <Button onClick={() => {
-                      setEditingLink(null);
-                      setNewLink({
-                        id: '',
-                        label: '',
-                        url: '',
-                        thumbnail: '',
-                        category: ''
-                      });
-                    }}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Quick Link
+                    <Button size="sm" variant="themedPrimary">
+                      <Plus className="mr-2 h-4 w-4" /> Add New Link
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[425px]">

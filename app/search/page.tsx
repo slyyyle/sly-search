@@ -171,7 +171,8 @@ export default function SearchPage() {
 
     // Determine loadoutConfig (starter vs saved)
             if (currentActiveId === 'starter') {
-      loadoutConfig = availableEngines.map(engine => ({ ...engine, enabled: engine.id === 'google' || engine.id === 'duckduckgo' }));
+      // Use the available engines directly, respecting their fetched 'enabled' status
+      loadoutConfig = availableEngines;
             } else {
                const savedLoadout = settings.engines.loadouts?.find(l => l.id === currentActiveId);
                if (savedLoadout?.config) {
@@ -372,9 +373,15 @@ export default function SearchPage() {
       }
 
       // --- Store results directly --- 
+      const sourceToAdd = data.source || knowledgeSource; // Determine the source once
+      const processedSearchResults = (data.results || []).map((item: SearchResultItem) => ({
+        ...item,
+        source: sourceToAdd, // Ensure each item has the source property
+      }));
+      
       setResults({
-          searchResults: data.results || [], // Store standard results
-          source: data.source || knowledgeSource,
+          searchResults: processedSearchResults, // <<< Use the processed list
+          source: sourceToAdd, // Store the overall source as well
           query: currentQuery,
           category: activeTab,
           total_results: data.total_results ?? data.number_of_results, // Use API's total count

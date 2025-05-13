@@ -2,16 +2,14 @@
 
 import type React from "react"
 import { Skeleton } from "@/components/ui/skeleton"
-import WebListResults from "@/components/search-layouts/WebListResults"
-import YoutubeGridResults from "@/components/search-layouts/youtube-grid-results"
-import PhotoGridResults from "@/components/search-layouts/photo-results"
-import WebGridResults from "./search-layouts/web-grid-results"
 import WebCompactResults from "./search-layouts/WebCompactResults"
 import WebInfoboxResults from "./search-layouts/WebInfoboxResults"
 import { useSettings } from "@/lib/use-settings"
 import type { SearchResultsState, WebResult, YouTubeResultItem, PhotoResultItem, SearchResultItem, Infobox } from "@/types/search"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
+import { GenericListResults } from "./search-layouts/generic-list-results"
+import GenericGridResults from "./search-layouts/generic-grid-results"
 
 interface SearchResultsProps {
   isLoading: boolean
@@ -44,37 +42,6 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   // console.log("SearchResults received source from data:", resultsData?.source);
   // console.log("SearchResults received knowledgeSource from UI:", knowledgeSource);
   // console.log("SearchResults received webResultsView:", webResultsView);
-
-  // --- Determine the correct openInNewTab setting ---
-  let openInNewTabValue = true; // Default to true
-  const resultSourceKey = resultsData?.source; // Actual source from the backend response
-
-  if (resultSourceKey) {
-    // UPDATED: Directly check if the source key exists in personalSources settings
-    if (settings.personalSources && resultSourceKey in settings.personalSources) {
-      // Use source-specific setting if available (handles 'web' now too)
-      const sourceConfig = settings.personalSources[resultSourceKey as keyof typeof settings.personalSources];
-      if (sourceConfig && typeof sourceConfig === 'object' && 'openNewTab' in sourceConfig) {
-         openInNewTabValue = sourceConfig.openNewTab ?? true;
-      } else {
-         // Fallback if structure is unexpected (should have default)
-         console.warn(`Source config for '${resultSourceKey}' missing 'openNewTab' property or has unexpected structure. Defaulting to true.`);
-         openInNewTabValue = true;
-      }
-    } else {
-      // Fallback for unknown or unconfigured sources
-      console.warn(`Unknown or unconfigured source type '${resultSourceKey}' encountered in SearchResults. Defaulting openInNewTab to true.`);
-      openInNewTabValue = true;
-    }
-  } else if (isLoading) {
-      // While loading, default doesn't matter much
-      openInNewTabValue = true;
-  } else {
-      // No resultsData or source, default to true
-      openInNewTabValue = true;
-  }
-  // --- End determining openInNewTab setting ---
-
 
   // Loading state
   if (isLoading) {
@@ -111,21 +78,63 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
   // Extract the actual list of results (might be empty if only infoboxes exist)
   const searchResultsList = resultsData.searchResults || [];
+  const infoboxes = resultsData?.infoboxes || []; // Also define infoboxes here
 
-  // Helper to assert type for rendering (use cautiously)
-  const isWebResultArray = (results: SearchResultItem[]): results is WebResult[] => {
-      // Basic check, assumes homogeneity if the first item fits
-      return results.length > 0 && 'url' in results[0] && 'title' in results[0] && 'content' in results[0];
-  };
-  const isYoutubeResultArray = (results: SearchResultItem[]): results is YouTubeResultItem[] => {
-      // Use a property specific to YouTubeResultItem, like vid or channel_name
-      return results.length > 0 && ('vid' in results[0] || 'channel_name' in results[0]) && results[0].source === 'youtube';
-  };
-  const isPhotoResultArray = (results: SearchResultItem[]): results is PhotoResultItem[] => {
-      // Use properties specific to PhotoResultItem
-      return results.length > 0 && 'filename' in results[0] && 'relative_path' in results[0] && results[0].source === 'photos';
-  };
+  // --- INSERT NEW LOGIC START ---
+  // --- Determine View Mode ---
+  const userPreferredLayout = settings?.appearance?.resultsLayout || "list";
+  let finalViewMode: "list" | "grid" | "compact" = "list"; // Default
 
+  if (resultsData.source) { // source was defined earlier
+    switch (resultsData.source) {
+      case 'photos':
+      case 'youtube':
+        finalViewMode = 'grid';
+        break;
+      case 'obsidian':
+      case 'music':
+      case 'freshrss':
+        finalViewMode = 'list';
+        break;
+      case 'web':
+        finalViewMode = userPreferredLayout as "list" | "grid" | "compact";
+        break;
+      // Add cases for other known sources if they have specific rules
+      // case 'localFiles':
+      // case 'ai':
+      default:
+        // For unknown or unhandled sources, default to list
+        finalViewMode = 'list';
+        console.warn(`SearchResults: Unknown or unhandled source type "${resultsData.source}". Defaulting to list view.`);
+        break;
+    }
+  } else if (infoboxes.length > 0 && searchResultsList.length === 0) {
+      // If only infoboxes exist, we treat it as web for rendering the infobox
+      console.log("Only infoboxes found, no search results to determine view mode.");
+  } else {
+    console.warn("SearchResults: Could not determine source from results data. Defaulting to list view.");
+    finalViewMode = 'list'; // Default if source is somehow missing
+  }
+
+  // --- Determine openInNewTab Setting ---
+  let openInNewTabValue = true; // Default to true
+  const source = resultsData?.source; // Define source here for clarity
+  const resultSourceKey = source as keyof typeof settings.personalSources;
+
+  // Check if resultSourceKey is a valid key before accessing settings
+  if (source && source !== 'web' && settings.personalSources && typeof resultSourceKey === 'string' && resultSourceKey in settings.personalSources) {
+    // Add type assertion for indexing
+    const sourceSettings = settings.personalSources[resultSourceKey as keyof typeof settings.personalSources];
+    // Ensure sourceSettings is an object and has the openNewTab boolean property
+    if (sourceSettings && typeof sourceSettings === 'object' && 'openNewTab' in sourceSettings && typeof sourceSettings.openNewTab === 'boolean') {
+      openInNewTabValue = sourceSettings.openNewTab;
+    }
+  } else if (source === 'web' && typeof settings.personalSources?.web?.openNewTab === 'boolean') { // Corrected: openNewTab
+      openInNewTabValue = settings.personalSources.web.openNewTab;
+  }
+  // --- End openInNewTab Setting ---
+
+  // --- Render Results ---
   return (
     <>
       {/* Display non-critical errors for Obsidian */}
@@ -143,123 +152,26 @@ const SearchResults: React.FC<SearchResultsProps> = ({
         </Alert>
       )}
 
-      {/* --- Render logic based on knowledgeSource --- */}
-      {knowledgeSource === 'web' ? (
-        // --- START: Rendering for 'web' (Web/SearXNG) Source ---
-        (() => { // Wrap in IIFE to define displayMode
-          // Determine the display mode: force grid for images/videos, else use setting
-          const displayMode = 
-            (activeTab === 'images' || activeTab === 'videos') 
-            ? 'grid' // Force grid for image/video tabs
-            : resultsLayout; // Use the setting value otherwise
-          
-          console.log(`[SearchResults Render] knowledgeSource: web, activeTab: ${activeTab}, SettingLayout: ${resultsLayout}, Final displayMode: ${displayMode}`); // Log decision
-
-          return (
-        <>
-              {/* 1. Render Infoboxes if they exist - USE RENAMED COMPONENT */}
-          {resultsData?.infoboxes && resultsData.infoboxes.length > 0 && (
-            <div className="mb-6">
-                  <WebInfoboxResults infoboxes={resultsData.infoboxes} openInNewTab={openInNewTabValue}/>
-            </div>
-          )}
-
-              {/* 2. Render Standard Results based on calculated displayMode - USE RENAMED COMPONENTS */}
-          {searchResultsList.length > 0 && (
-            <>
-                  {displayMode === "list" && (
-                    <WebListResults results={searchResultsList} openInNewTab={openInNewTabValue} />
-              )}
-                  {displayMode === "grid" && isWebResultArray(searchResultsList) && (
-                <WebGridResults 
-                  results={searchResultsList} 
-                  openInNewTab={openInNewTabValue} 
-                  resultsColumns={settings?.personalSources?.web?.resultsColumns || 4}
-                />
-              )}
-                  {displayMode === "compact" && isWebResultArray(searchResultsList) && (
-                    <WebCompactResults 
-                  results={searchResultsList} 
-                  openInNewTab={openInNewTabValue} 
-                />
-              )}
-                  {/* Fallback to list view - USE RENAMED COMPONENT */}
-                  {(displayMode === "grid" || displayMode === "compact") && !isWebResultArray(searchResultsList) && (
-                    <WebListResults results={searchResultsList} openInNewTab={openInNewTabValue} />
-              )}
-            </>
-          )}
-          
-          {/* Add rendering for Answers/Suggestions if needed here */}
-          {/* {resultsData?.answers && resultsData.answers.length > 0 && <AnswersComponent answers={resultsData.answers} />} */}
-          {/* {resultsData?.suggestions && resultsData.suggestions.length > 0 && <SuggestionsComponent suggestions={resultsData.suggestions} />} */}
-        </>
-          );
-        })()
-        // --- END: Rendering for 'web' Source ---
-
-      ) : (
-        // --- START: Refactored Rendering for OTHER Knowledge Sources ---
-        <>
-          {/* Place the existing logic for YouTube, Photos, Obsidian, etc. here */}
-          {/* Only render this section if searchResultsList is not empty for non-normal sources */}
-          {searchResultsList.length > 0 && (() => {
-            const source = resultsData.source; // Use the source from the data itself
-
-            // Specific source layouts take precedence (YouTube, Photos)
-            // REPLACED IF/ELSE CHAIN WITH SWITCH STATEMENT
-            switch (source) {
-              case 'youtube':
-                if (isYoutubeResultArray(searchResultsList)) {
-                  // Use defaultYouTubeView prop from parent (app/search/page.tsx)
-              if (defaultYouTubeView === 'card') {
-                    console.log("[SearchResults Render] Rendering YoutubeGridResults");
-                return <YoutubeGridResults results={searchResultsList} openInNewTab={openInNewTabValue} />;
-              } else {
-                    console.log("[SearchResults Render] Rendering WebListResults for YouTube"); // Log updated
-                    return <WebListResults results={searchResultsList} openInNewTab={openInNewTabValue} />; // USE RENAMED COMPONENT
-              }
-            }
-                // Fallback if type guard fails
-                console.warn("Data source is 'youtube' but results don't match YouTubeResultItem structure. Falling back to WebListResults."); // Log updated
-                return <WebListResults results={searchResultsList} openInNewTab={openInNewTabValue} />; // USE RENAMED COMPONENT
-
-              case 'photos':
-                if (isPhotoResultArray(searchResultsList)) {
-                   // Use defaultPhotosView prop from parent (app/search/page.tsx)
-              if (defaultPhotosView === 'card') {
-                    console.log("[SearchResults Render] Rendering PhotoGridResults");
-                return <PhotoGridResults results={searchResultsList} openInNewTab={openInNewTabValue} />;
-              } else {
-                    console.log("[SearchResults Render] Rendering WebListResults for Photos"); // Log updated
-                    return <WebListResults results={searchResultsList} openInNewTab={openInNewTabValue} />; // USE RENAMED COMPONENT
-              }
-            }
-                 // Fallback if type guard fails
-                console.warn("Data source is 'photos' but results don't match PhotoResultItem structure. Falling back to WebListResults."); // Log updated
-                return <WebListResults results={searchResultsList} openInNewTab={openInNewTabValue} />; // USE RENAMED COMPONENT
-
-              case 'obsidian':
-                console.log("[SearchResults Render] Rendering WebListResults for obsidian source"); // Log updated
-                return <WebListResults results={searchResultsList} openInNewTab={openInNewTabValue} />; // USE RENAMED COMPONENT
-
-              case 'localFiles':
-              case 'ai':
-                console.log(`[SearchResults Render] Rendering WebListResults for source: ${source}`); // <-- Updated log
-                // Assuming WebListResults is the desired view for these
-                return <WebListResults results={searchResultsList} openInNewTab={openInNewTabValue} />;
-
-              default:
-                // Fallback for any unexpected source type or if source is missing from data
-                console.warn(`[SearchResults Render] Unhandled source type: ${source}. Falling back to WebListResults.`); // <-- Updated log
-                return <WebListResults results={searchResultsList} openInNewTab={openInNewTabValue} />;
-            }
-          })()}
-        </>
-        // --- END: Refactored Rendering for OTHER Knowledge Sources ---
+      {/* Render Infoboxes (Always at the top for 'web' source) */}
+      {infoboxes.length > 0 && (
+        <WebInfoboxResults infoboxes={infoboxes} openInNewTab={openInNewTabValue} />
       )}
-      
-    </>
+
+      {/* Render Search Results based on finalViewMode */}
+      {searchResultsList.length > 0 && (
+        <>
+          {finalViewMode === 'list' && (
+            <GenericListResults results={searchResultsList} openInNewTab={openInNewTabValue} />
+          )}
+          {finalViewMode === 'grid' && (
+            <GenericGridResults results={searchResultsList} openInNewTab={openInNewTabValue} />
+          )}
+          {finalViewMode === 'compact' && (
+            <WebCompactResults results={searchResultsList as WebResult[]} openInNewTab={openInNewTabValue} />
+          )}
+        </>
+      )}
+    </> // This is the closing tag from the *new* return statement's fragment
   );
 }
 

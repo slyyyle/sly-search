@@ -44,16 +44,48 @@ export interface YouTubeResultItem extends BaseResult {
 
 // Interface for Photo results
 export interface PhotoResultItem {
+  id?: string; // Add optional ID if available
   filename: string;
   relative_path: string;
-  thumbnail_url?: string | null; // Optional: if backend generates thumbnails
-  modified_time?: number | null; // Optional: modification timestamp
-  result_type: 'photo'; // Explicitly photo
+  thumbnail_url?: string | null; 
+  modified_time?: number | null; 
+  result_type: 'photo'; 
   source: 'photos';
 }
 
+// +++ Interface for FreshRSS results +++
+export interface FreshRSSResult extends BaseResult {
+  result_type: 'freshrss';
+  source: 'freshrss';
+  url: string; 
+  published_time?: number; 
+  author?: string; 
+  feed_title?: string; 
+  categories?: string[];
+}
+
+// +++ Interface for Music results +++
+export interface MusicResultItem {
+  id?: string; // Use if backend provides a unique ID
+  source: 'music';
+  result_type: 'music';
+  title: string; // Song name
+  artist?: string;
+  album?: string; // Add album if available/needed
+  duration?: number; // Duration in seconds (example)
+  filepath: string; // Path to the file
+  // Add other relevant fields like genre, track number, thumbnail_url etc. if available
+}
+
 // Union type for any search result item
-export type SearchResultItem = WebResult | ObsidianResult | YouTubeResultItem | PhotoResultItem;
+export type SearchResultItem = 
+  | WebResult 
+  | ObsidianResult 
+  | YouTubeResultItem 
+  | PhotoResultItem 
+  | FreshRSSResult
+  | MusicResultItem; // Added MusicResultItem
+  // | AIResultItem; // Add other types here
 
 // Interface for the backend response specifically for photos source
 export interface PhotosSearchResponse {
@@ -61,6 +93,16 @@ export interface PhotosSearchResponse {
   query: string;
   total_results: number;
   source: 'photos';
+}
+
+// +++ Interface for the backend response specifically for FreshRSS source +++
+export interface FreshRSSSearchResponse {
+  results: FreshRSSResult[];
+  query: string;
+  total_results: number; // Total matching articles found
+  source: 'freshrss';
+  // Add other fields if needed, like errors
+  errors?: string[];
 }
 
 // --- Infobox Types (Based on SearXNG structure) ---
@@ -93,7 +135,7 @@ export interface Infobox {
 // Interface for the structured state managed in the search page
 export interface SearchResultsState {
   searchResults: SearchResultItem[];
-  source: 'obsidian' | 'web' | 'youtube' | 'photos' | string; // Be specific about known sources
+  source: 'obsidian' | 'web' | 'youtube' | 'photos' | 'freshrss' | string; // ADDED freshrss
   query?: string;
   pagination?: any; // Keep existing pagination structure for web
   nonCriticalErrors?: string[]; // For Obsidian specific file errors
@@ -106,4 +148,13 @@ export interface SearchResultsState {
   number_of_results?: number;
   total_results?: number; // Keep this for potential use
   currentPage?: number; // Keep this for UI state
+}
+
+// Interface for the overall search response from the backend
+export interface SearchResponse {
+  results: SearchResultItem[];
+  infobox?: any | null; // Or specific Infobox type
+  suggestions?: string[];
+  error?: string | null;
+  query_time?: number;
 } 

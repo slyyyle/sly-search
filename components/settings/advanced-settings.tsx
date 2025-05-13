@@ -136,7 +136,7 @@ export function AdvancedSettings({ settings, updateSetting }: AdvancedSettingsPr
               value={currentSettings.redisUrl || ""}
               onChange={(e) => updateSetting("advanced", "redisUrl", e.target.value)}
               disabled={true}
-              className="flex-grow cursor-not-allowed opacity-70 text-right"
+              className="w-[600px] cursor-not-allowed opacity-70 text-right"
             />
           </div>
         </CardContent>

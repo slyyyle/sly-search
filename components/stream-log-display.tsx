@@ -58,6 +58,24 @@ export function StreamLogDisplay({ messages, error, maxHeight = '300px', include
         case 'error':
           fullText = msg.data?.message || '';
           break;
+        case 'llm_output':
+          if (typeof msg.data?.parsed_output === 'string') {
+            fullText = msg.data.parsed_output;
+          } else if (typeof msg.data?.parsed === 'string') {
+            fullText = msg.data.parsed;
+          } else {
+            fullText = JSON.stringify(msg.data); // Fallback
+          }
+          break;
+        case 'decision':
+          if (typeof msg.data?.parsed_output === 'string') {
+            fullText = msg.data.parsed_output;
+          } else if (typeof msg.data?.parsed === 'string') {
+            fullText = msg.data.parsed;
+          } else {
+            fullText = JSON.stringify(msg.data);
+          }
+          break;
         default:
           fullText = JSON.stringify(msg.data);
       }
@@ -171,7 +189,34 @@ export function StreamLogDisplay({ messages, error, maxHeight = '300px', include
         }
         break;
         
+      case 'llm_output':
+        icon = <ChevronsRight className="h-3 w-3 text-purple-400 flex-shrink-0 mt-0.5" />;
+        if (typeof msg.data?.parsed_output === 'string') {
+          content = msg.data.parsed_output;
+        } else if (typeof msg.data?.parsed === 'string') {
+          content = msg.data.parsed;
+        } else {
+          content = JSON.stringify(msg.data); // Fallback
+        }
+        contentColor = "text-purple-300";
+        prefix = "[LLM] ";
+        break;
+
+      case 'decision':
+        icon = <Info className="h-3 w-3 text-yellow-400 flex-shrink-0 mt-0.5" />;
+         if (typeof msg.data?.parsed_output === 'string') {
+          content = msg.data.parsed_output;
+        } else if (typeof msg.data?.parsed === 'string') {
+          content = msg.data.parsed;
+        } else {
+          content = JSON.stringify(msg.data);
+        }
+        contentColor = "text-yellow-300";
+        prefix = "[AI] ";
+        break;
+        
       default:
+        icon = <Terminal className="h-3 w-3 text-muted-foreground flex-shrink-0 mt-0.5" />;
         content = JSON.stringify(msg.data);
         break;
     }

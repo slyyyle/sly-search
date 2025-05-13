@@ -278,15 +278,13 @@ export default function SlaiPage() {
   };
 
   const handleCancelSSE = () => {
-    console.log("[SLAI Page] User cancelled engine selection.");
+    console.log("[SLAI Page] User cancelled engine selection. Navigating to home page.");
     streamAbortControllerRef.current?.abort();
     streamAbortControllerRef.current = null;
     setSseSelectionPhase('idle');
     setFinalEnginesForConfirmation(null);
-    setStreamError("Engine selection cancelled by user.");
     setRefinedCategoriesFromSSE(null);
-    // isInitialStreamAttempted remains true, so it won't auto-restart.
-    // User would need to navigate away or a refresh/new query to try again.
+    router.push('/'); // Navigate to the root page
   };
 
   if (!isInitialLoadComplete || settingsLoading) {

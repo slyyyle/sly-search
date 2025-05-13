@@ -82,11 +82,11 @@
     --island-hopper-c3-rgb: 34, 139, 34;
     --island-hopper-c4-rgb: 255, 105, 180;
 
-    /* Mango Tango Theme colors */
-    --mango-tango-c1-rgb: 255, 165, 0;
-    --mango-tango-c2-rgb: 255, 223, 0;
-    --mango-tango-c3-rgb: 50, 205, 50;
-    --mango-tango-c4-rgb: 255, 20, 147;
+    /* Mango Tango Theme colors (Reversed) */
+    --mango-tango-c1-rgb: 255, 20, 147;  /* Was Deep Pink (c4), now C1 */
+    --mango-tango-c2-rgb: 50, 205, 50;   /* Was Lime Green (c3), now C2 */
+    --mango-tango-c3-rgb: 255, 223, 0;  /* Was Gold/Yellow (c2), now C3 */
+    --mango-tango-c4-rgb: 255, 165, 0;  /* Was Orange (c1), now C4 */
 
     /* Lagoon Luster Theme colors */
     --lagoon-luster-c1-rgb: 0, 255, 255;
@@ -132,6 +132,7 @@
 
     /* Slider Thumb Border Color */
     --slider-thumb-border-color: var(--google-color-1-rgb); /* Default to Google Blue */
+    --switch-checked-bg-color: rgb(var(--google-color-1-rgb)); /* ADDED for Switch */
   }
 
   html[data-theme="ocean-breeze"] {
@@ -139,7 +140,8 @@
     --gradient-color-2: var(--ocean-color-2-rgb);
     --gradient-color-3: var(--ocean-color-3-rgb);
     --gradient-color-4: var(--ocean-color-4-rgb);
-    --slider-thumb-border-color: var(--ocean-color-1-rgb); /* New: #48D1CC (Medium Turquoise / Vibrant Seafoam Blue) */
+    --slider-thumb-border-color: var(--ocean-color-1-rgb);
+    --switch-checked-bg-color: rgb(var(--ocean-color-1-rgb)); /* ADDED for Switch */
   }
 
   html[data-theme="sunset-tide"] { /* Was sunset-vibes, Maps to Sunset Tide */
@@ -147,7 +149,8 @@
     --gradient-color-2: var(--sunset-tide-c2-rgb);
     --gradient-color-3: var(--sunset-tide-c3-rgb);
     --gradient-color-4: var(--sunset-tide-c4-rgb);
-    --slider-thumb-border-color: var(--sunset-tide-c2-rgb); /* New: #0575e6 (Blue) */
+    --slider-thumb-border-color: var(--sunset-tide-c2-rgb);
+    --switch-checked-bg-color: rgb(var(--sunset-tide-c1-rgb)); /* ADDED for Switch */
   }
 
   html[data-theme="surf-shine"] { /* Was nebula, Maps to Surf Shine */
@@ -155,7 +158,8 @@
     --gradient-color-2: var(--surf-shine-c2-rgb);
     --gradient-color-3: var(--surf-shine-c3-rgb);
     --gradient-color-4: var(--surf-shine-c4-rgb);
-    --slider-thumb-border-color: var(--surf-shine-c1-rgb); /* New: #12c2e9 (Teal) */
+    --slider-thumb-border-color: var(--surf-shine-c1-rgb);
+    --switch-checked-bg-color: rgb(var(--surf-shine-c1-rgb)); /* ADDED for Switch */
   }
 
   html[data-theme="wedding-day-shred"] { /* Was monochrome-steel, Maps to Wedding Day Shred */
@@ -163,7 +167,8 @@
     --gradient-color-2: var(--wedding-day-shred-c2-rgb);
     --gradient-color-3: var(--wedding-day-shred-c3-rgb);
     --gradient-color-4: var(--wedding-day-shred-c4-rgb);
-    --slider-thumb-border-color: var(--wedding-day-shred-c1-rgb); /* New: #40e0d0 (Turquoise) */
+    --slider-thumb-border-color: var(--wedding-day-shred-c1-rgb);
+    --switch-checked-bg-color: rgb(var(--wedding-day-shred-c1-rgb)); /* ADDED for Switch */
   }
 
   html[data-theme="rasta-waves"] { /* Was desert-mirage, Maps to Rasta Waves */
@@ -171,7 +176,8 @@
     --gradient-color-2: var(--rasta-waves-c2-rgb);
     --gradient-color-3: var(--rasta-waves-c3-rgb);
     --gradient-color-4: var(--rasta-waves-c4-rgb);
-    --slider-thumb-border-color: var(--rasta-waves-c2-rgb); /* New: #fff200 (Yellow) */
+    --slider-thumb-border-color: var(--rasta-waves-c2-rgb);
+    --switch-checked-bg-color: rgb(var(--rasta-waves-c1-rgb)); /* ADDED for Switch */
   }
 
   html[data-theme="surfhabi"] { /* Was ruby-flare, Maps to Surfhabi */
@@ -179,7 +185,8 @@
     --gradient-color-2: var(--surfhabi-c2-rgb);
     --gradient-color-3: var(--surfhabi-c3-rgb);
     --gradient-color-4: var(--surfhabi-c4-rgb);
-    --slider-thumb-border-color: var(--surfhabi-c1-rgb); /* New: #a80077 (Magenta) */
+    --slider-thumb-border-color: var(--surfhabi-c1-rgb);
+    --switch-checked-bg-color: rgb(var(--surfhabi-c1-rgb)); /* ADDED for Switch */
   }
 
   html[data-theme="island-hopper"] {
@@ -188,6 +195,7 @@
     --gradient-color-3: var(--island-hopper-c3-rgb);
     --gradient-color-4: var(--island-hopper-c4-rgb);
     --slider-thumb-border-color: var(--island-hopper-c1-rgb);
+    --switch-checked-bg-color: rgb(var(--island-hopper-c1-rgb)); /* ADDED for Switch */
   }
 
   html[data-theme="mango-tango"] {
@@ -196,6 +204,7 @@
     --gradient-color-3: var(--mango-tango-c3-rgb);
     --gradient-color-4: var(--mango-tango-c4-rgb);
     --slider-thumb-border-color: var(--mango-tango-c1-rgb);
+    --switch-checked-bg-color: rgb(var(--mango-tango-c1-rgb)); /* ADDED for Switch */
   }
 
   html[data-theme="lagoon-luster"] {
@@ -204,6 +213,7 @@
     --gradient-color-3: var(--lagoon-luster-c3-rgb);
     --gradient-color-4: var(--lagoon-luster-c4-rgb);
     --slider-thumb-border-color: var(--lagoon-luster-c1-rgb);
+    --switch-checked-bg-color: rgb(var(--lagoon-luster-c1-rgb)); /* ADDED for Switch */
   }
 
   html[data-theme="hibiscus-heat"] {
@@ -212,6 +222,7 @@
     --gradient-color-3: var(--hibiscus-heat-c3-rgb);
     --gradient-color-4: var(--hibiscus-heat-c4-rgb);
     --slider-thumb-border-color: var(--hibiscus-heat-c1-rgb);
+    --switch-checked-bg-color: rgb(var(--hibiscus-heat-c1-rgb)); /* ADDED for Switch */
   }
 
   html[data-theme="neon-pipeline"] {
@@ -220,6 +231,7 @@
     --gradient-color-3: var(--neon-pipeline-c3-rgb);
     --gradient-color-4: var(--neon-pipeline-c4-rgb);
     --slider-thumb-border-color: var(--neon-pipeline-c1-rgb);
+    --switch-checked-bg-color: rgb(var(--neon-pipeline-c1-rgb)); /* ADDED for Switch */
   }
 
   html[data-theme="chrome-wave"] {
@@ -228,6 +240,7 @@
     --gradient-color-3: var(--chrome-wave-c3-rgb);
     --gradient-color-4: var(--chrome-wave-c4-rgb);
     --slider-thumb-border-color: var(--chrome-wave-c2-rgb);
+    --switch-checked-bg-color: rgb(var(--chrome-wave-c1-rgb)); /* ADDED for Switch */
   }
 
   html[data-theme="cyber-reef"] {
@@ -236,6 +249,7 @@
     --gradient-color-3: var(--cyber-reef-c3-rgb);
     --gradient-color-4: var(--cyber-reef-c4-rgb);
     --slider-thumb-border-color: var(--cyber-reef-c2-rgb);
+    --switch-checked-bg-color: rgb(var(--cyber-reef-c1-rgb)); /* ADDED for Switch */
   }
 
   html[data-theme="quantum-swell"] {
@@ -244,6 +258,7 @@
     --gradient-color-3: var(--quantum-swell-c3-rgb);
     --gradient-color-4: var(--quantum-swell-c4-rgb);
     --slider-thumb-border-color: var(--quantum-swell-c2-rgb);
+    --switch-checked-bg-color: rgb(var(--quantum-swell-c1-rgb)); /* ADDED for Switch */
   }
 
   html {

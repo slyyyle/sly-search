@@ -76,9 +76,11 @@ export function LoadoutManager<T extends Engine[] | SourceListItem[]>({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">{typeLabel} Loadouts</h3>
-      </div>
+      {type !== "engines" && (
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium">{typeLabel} Loadouts</h3>
+        </div>
+      )}
 
       {/* Render Locked Loadouts First */}
       <div className="space-y-2 mt-3">
@@ -86,28 +88,29 @@ export function LoadoutManager<T extends Engine[] | SourceListItem[]>({
           <div
             key={loadout.id}
             className={`flex items-center justify-between p-2 rounded-md border ${
-              loadout.id === activeLoadoutId ? "border-primary/50 bg-primary/5" : "border-border/40"
+              loadout.id === activeLoadoutId ? "border-[var(--switch-checked-bg-color)] bg-primary/5" : "border-border/40"
             }`}
           >
             <div className="flex items-center gap-2">
               <Lock className="h-3.5 w-3.5 text-muted-foreground" /> {/* Add Lock Icon */}
               <span className="font-medium text-sm">{loadout.name}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {loadout.id !== activeLoadoutId && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => onSelectLoadout(loadout.id)}
+                >
+                  Activate
+                </Button>
+              )}
               {loadout.id === activeLoadoutId && (
-                <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30 px-1.5 py-0.5">
+                <Badge variant="outline" className="text-xs bg-primary/10 text-[var(--switch-checked-bg-color)] border-[var(--switch-checked-bg-color)]/50 px-1.5 py-0.5">
                   Active
                 </Badge>
               )}
-            </div>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => onSelectLoadout(loadout.id)}
-                disabled={loadout.id === activeLoadoutId}
-              >
-                Activate
-              </Button>
               {/* Delete button is always disabled for locked loadouts */}
               <Button
                 variant="ghost"
@@ -134,28 +137,29 @@ export function LoadoutManager<T extends Engine[] | SourceListItem[]>({
           <div
             key={loadout.id}
             className={`flex items-center justify-between p-2 rounded-md border ${
-              loadout.id === activeLoadoutId ? "border-primary/50 bg-primary/5" : "border-border/40"
+              loadout.id === activeLoadoutId ? "border-[var(--switch-checked-bg-color)] bg-primary/5" : "border-border/40"
             }`}
           >
             <div className="flex items-center gap-2">
               {/* No lock icon for user loadouts */}
               <span className="font-medium text-sm">{loadout.name}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {loadout.id !== activeLoadoutId && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => onSelectLoadout(loadout.id)}
+                >
+                  Activate
+                </Button>
+              )}
               {loadout.id === activeLoadoutId && (
-                <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30 px-1.5 py-0.5">
+                <Badge variant="outline" className="text-xs bg-primary/10 text-[var(--switch-checked-bg-color)] border-[var(--switch-checked-bg-color)]/50 px-1.5 py-0.5">
                   Active
                 </Badge>
               )}
-            </div>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => onSelectLoadout(loadout.id)}
-                disabled={loadout.id === activeLoadoutId}
-              >
-                Activate
-              </Button>
               {/* Enable delete button for user loadouts */}
               <Button
                 variant="ghost"

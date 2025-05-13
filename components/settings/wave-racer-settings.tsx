@@ -38,7 +38,7 @@ export function WaveRacerSettings({ settings, updateSetting }: WaveRacerSettings
               <Label>Golden Quiver Tuning</Label>
               <SettingsTooltip content="AI is good, but make it yours. Add context for the AI to use to help your searches better suit how you think!" />
             </div>
-            <Button onClick={() => setIsTuningDialogOpen(true)}>Tune Quiver</Button>
+            <Button onClick={() => setIsTuningDialogOpen(true)} variant="themedPrimary">Tune Quiver</Button>
           </div>
         </CardContent>
       </Card>

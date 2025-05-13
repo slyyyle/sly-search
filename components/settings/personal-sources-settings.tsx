@@ -29,6 +29,7 @@ import {
   LayoutGrid,
   GripVertical,
   Settings,
+  Rss, // +++ Added Rss icon
 } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
@@ -49,16 +50,18 @@ import {
   type AISourceConfig,
   type MusicSourceConfig,
   type YouTubeSourceConfig,
-  type PhotosSourceConfig
+  type PhotosSourceConfig,
+  type FreshRSSSourceConfig // +++ Added FreshRSS type
 } from "@/lib/settings-schema"
+import { DialogFooter } from "@/components/ui/dialog"
 
 // --- Define type for valid source config keys --- START ---
 // Get keys from the *non-optional* shape of the personalSources object schema
 type PersonalSourcesShapeKeys = keyof typeof appSettingsSchema.shape.personalSources._def.innerType.shape;
 // Exclude 'sources' and 'loadouts'
 type SourceConfigKey = Exclude<PersonalSourcesShapeKeys, 'sources' | 'loadouts'>;
-// Add 'web' to the list of valid keys we might handle configs for
-const validSourceKeys: SourceConfigKey[] = ['web', 'obsidian', 'localFiles', 'ai', 'youtube', 'music', 'photos'];
+// Add 'web' and 'freshrss' to the list of valid keys we might handle configs for
+const validSourceKeys: SourceConfigKey[] = ['web', 'obsidian', 'localFiles', 'ai', 'youtube', 'music', 'photos', 'freshrss']; // +++ Added freshrss
 // Type for the actual config objects
 type AnySourceConfig = 
   | ObsidianSourceConfig 
@@ -67,7 +70,8 @@ type AnySourceConfig =
   | YouTubeSourceConfig 
   | MusicSourceConfig 
   | PhotosSourceConfig
-  | WebSourceConfig // Add WebSourceConfig to the union type
+  | WebSourceConfig
+  | FreshRSSSourceConfig; // +++ Added FreshRSS type
 // --- Define type for valid source config keys --- END ---
 
 // Define interface for a single source
@@ -75,8 +79,8 @@ interface Source {
   id: string;
   label: string;
   icon: string;
-  color: string;
-  gradient: string;
+  color?: string; // <-- Made optional
+  gradient?: string; // <-- Made optional
   type?: string;
   // Add other source-specific properties if needed
   path?: string;
@@ -96,22 +100,34 @@ interface PersonalSourcesSettingsProps {
 }
 
 export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSourcesSettingsProps) {
-  const { saveLoadout, selectLoadout, deleteLoadout } = useSettings()
+  const { saveLoadout, selectLoadout, deleteLoadout, saveSettings } = useSettings()
 
   // Default settings within the component
-  const currentSources = settings?.sources || [
-      { id: "web", label: "Web", icon: "Zap", color: "#176BEF", gradient: "from-[#176BEF]/70 to-[#FF3E30]/70" },
-      { id: "obsidian", label: "Obsidian", icon: "Brain", color: "#7E6AD7", gradient: "from-[#7E6AD7]/70 to-[#9C87E0]/70" },
-      { id: "localFiles", label: "Files", icon: "FileText", color: "#F7B529", gradient: "from-[#FF3E30]/70 to-[#F7B529]/70" },
-      { id: "ai", label: "AI", icon: "Bot", color: "#10B981", gradient: "from-[#10B981]/70 to-[#059669]/70" },
-      { id: "youtube", label: "YouTube", icon: "Youtube", color: "#FF0000", gradient: "from-[#FF0000]/70 to-[#CC0000]/70" },
-      { id: "music", label: "Music", icon: "Library", color: "#FF7700", gradient: "from-[#FF7700]/70 to-[#FF3300]/70" },
-      { id: "photos", label: "Photos", icon: "Image", color: "#3498DB", gradient: "from-[#3498DB]/70 to-[#2980B9]/70" },
+  const defaultSourceList: Source[] = [
+      // Explicitly type this array as Source[]
+      { id: "web", label: "Web", icon: "Zap", color: "#176BEF", gradient: "from-[#176BEF]/70 to-[#FF3E30]/70", type: 'web' },
+      { id: "obsidian", label: "Obsidian", icon: "Brain", color: "#7E6AD7", gradient: "from-[#7E6AD7]/70 to-[#9C87E0]/70", type: 'obsidian' },
+      { id: "localFiles", label: "Files", icon: "FileText", color: "#F7B529", gradient: "from-[#FF3E30]/70 to-[#F7B529]/70", type: 'localFiles' },
+      { id: "ai", label: "AI", icon: "Bot", color: "#10B981", gradient: "from-[#10B981]/70 to-[#059669]/70", type: 'ai' },
+      { id: "youtube", label: "YouTube", icon: "Youtube", color: "#FF0000", gradient: "from-[#FF0000]/70 to-[#CC0000]/70", type: 'youtube' },
+      { id: "music", label: "Music", icon: "Library", color: "#FF7700", gradient: "from-[#FF7700]/70 to-[#FF3300]/70", type: 'music' },
+      { id: "photos", label: "Photos", icon: "Image", color: "#3498DB", gradient: "from-[#3498DB]/70 to-[#2980B9]/70", type: 'photos' },
+      { id: "freshrss", label: "FreshRSS", icon: "Rss", color: "#FFA500", gradient: "from-[#FFA500]/70 to-[#FF8C00]/70", type: 'freshrss' }, 
     ];
-  // Remove unused surfLoadouts state
-  // const surfLoadouts = settings?.loadouts || []; 
 
-  const [sources, setSources] = useState<Source[]>(currentSources);
+  // Safely initialize sources state, mapping incoming settings to Source type
+  const initialSources = (settings?.sources || defaultSourceList).map(s => ({
+      id: s.id,
+      label: s.label,
+      icon: s.icon,
+      color: s.color,
+      gradient: s.gradient,
+      // Ensure type is always string | undefined, defaulting to id if null/undefined
+      type: s.type ?? s.id 
+  }));
+
+  // Use the potentially adjusted currentSources for initialization
+  const [sources, setSources] = useState<Source[]>(initialSources); // Initialize with mapped data
   const [newSource, setNewSource] = useState<Source>({
     id: "",
     label: "",
@@ -158,6 +174,15 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
 
       // Explicitly add the label to the initial temporary state
       initialDialogState.label = initialLabel;
+      
+      // Ensure FreshRSS specific properties are properly set
+      if (selectedSource === 'freshrss') {
+        console.log("Initializing FreshRSS settings:", settings?.freshrss);
+        // Make sure we're using the expected property names from backend
+        initialDialogState.base_url = settings?.freshrss?.base_url || '';
+        initialDialogState.username = settings?.freshrss?.username || '';
+        initialDialogState.api_password = settings?.freshrss?.api_password || '';
+      }
 
       setDialogTempSettings(initialDialogState); // Set the combined initial state
 
@@ -306,6 +331,13 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
     openNewTab: true, 
     searchOnCategory: true 
   };
+  const defaultFreshRSSSettings: FreshRSSSourceConfig = { // +++ Added FreshRSS defaults
+    base_url: undefined,
+    username: undefined,
+    api_password: undefined,
+    resultsPerPage: 10,
+    openNewTab: true,
+  };
 
   // Get the correctly typed settings object for the currently selected source,
   // merging current settings with defaults to ensure all keys exist.
@@ -330,6 +362,8 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
         return { ...defaultMusicSettings, ...(currentSourceConfig as MusicSourceConfig || {}) };
       case "photos":
         return { ...defaultPhotosSettings, ...(currentSourceConfig as PhotosSourceConfig || {}) };
+      case "freshrss": // +++ Added FreshRSS case
+        return { ...defaultFreshRSSSettings, ...(currentSourceConfig as FreshRSSSourceConfig || {}) };
       default:
         // Return the specific config if it exists, otherwise an empty object
         return currentSourceConfig || {};
@@ -349,6 +383,7 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
         case "youtube": currentConfig = settings?.youtube; break;
         case "music": currentConfig = settings?.music; break;
         case "photos": currentConfig = settings?.photos; break;
+        case "freshrss": currentConfig = settings?.freshrss; break; // +++ Added FreshRSS case
         default: console.warn("Attempting to update settings for unknown source type:", selectedSource); return;
     }
 
@@ -373,8 +408,9 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
     { value: "Book", label: "Book" },
     { value: "Bot", label: "Bot" },
     { value: "Youtube", label: "YouTube" },
-    { value: "Library", label: "Music" },
+    { value: "Library", label: "Music" }, // Consider changing Music icon to Music?
     { value: "Image", label: "Photos" },
+    { value: "Rss", label: "RSS" }, // +++ Added RSS icon
   ]
 
   // Icon preview component
@@ -400,6 +436,8 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
         return <Music className="h-4 w-4" />
       case "Image":
         return <Image className="h-4 w-4" />
+      case "Rss":
+        return <Rss className="h-4 w-4" />
       default:
         return <Database className="h-4 w-4" />
     }
@@ -473,6 +511,7 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
       case 'youtube': return 'YouTube';
       case 'music': return 'Music';
       case 'photos': return 'Photos';
+      case 'freshrss': return 'FreshRSS'; // +++ Added FreshRSS case
       default: return id; // Fallback for custom types - display the ID
     }
   };
@@ -623,6 +662,10 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
       }
     }
     // *** End label update logic ***
+
+    // --- ADDED: Call saveSettings to persist the changes ---
+    saveSettings(); 
+    // --- END ADDED ---
 
     // Close the dialog and reset states
     setIsSourceDialogOpen(false);
@@ -1108,7 +1151,19 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
         const isListView = dialogTempSettings?.defaultYouTubeView === 'list';
         return (
           <>
-             {/* YouTube Specific Settings */}
+            {/* General Settings: Label (Standardized) */}
+            <div className="space-y-1">
+                <Label htmlFor="dialog-source-label">Display Label</Label>
+                <Input
+                  id="dialog-source-label"
+                  value={dialogTempSettings?.label ?? sources.find(s => s.id === selectedSource)?.label ?? 'YouTube'}
+                  onChange={(e) => handleDialogInputChange('label', e.target.value)}
+                  placeholder="Source display name"
+                />
+            </div>
+            <Separator className="my-4" />
+
+            {/* YouTube Specific Settings */}
             <div className="space-y-1 mb-2">
               <div className="flex items-center">
                 <Label htmlFor="youtube-path">Path to Tartube JSON Export File</Label>
@@ -1155,20 +1210,6 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
               />
             </div>
             
-            {/* General Settings: Display Name - CONVERTED TO INLINE */}
-            <div className="flex items-center justify-between space-y-1 mb-2">
-              <div className="flex items-center">
-                <Label htmlFor="dialog-source-name" className="mr-2">Display Name</Label>
-              </div>
-              <Input
-                id="dialog-source-name"
-                value={dialogTempSettings?.label ?? sources.find(s => s.id === 'youtube')?.label ?? 'YouTube'} // Default to the current sources value or YouTube
-                onChange={(e) => handleDialogInputChange('label', e.target.value)} // Update temp state
-                placeholder="Source display name"
-                className="w-48 text-center"
-              />
-            </div>
-
             {/* Results Per Page Setting - CONVERTED TO INLINE */}
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center">
@@ -1561,6 +1602,112 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
            </>
         )
       }
+      case 'freshrss': { // +++ Corrected FreshRSS Case +++
+        // Bind to dialogTempSettings, use handlers
+        return (
+          <>
+            {/* General Settings: Label (Standardized) */}
+            <div className="space-y-1">
+                <Label htmlFor="dialog-source-label">Display Label</Label>
+                <Input
+                  id="dialog-source-label"
+                  value={dialogTempSettings?.label ?? sources.find(s => s.id === selectedSource)?.label ?? 'FreshRSS'}
+                  onChange={(e) => handleDialogInputChange('label', e.target.value)}
+                  placeholder="Source display name"
+                />
+            </div>
+            <Separator className="my-4" />
+
+            {/* FreshRSS Specific Settings */}
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <div className="flex items-center">
+                  <Label htmlFor="freshrss-base-url">Base URL</Label>
+                  <SettingsTooltip content="The base URL of your FreshRSS instance (e.g., https://rss.example.com)" />
+                </div>
+                <Input
+                  id="freshrss-base-url"
+                  type="url"
+                  placeholder="https://your.freshrss.instance"
+                  value={dialogTempSettings?.base_url ?? ''}
+                  onChange={(e) => handleDialogInputChange('base_url', e.target.value)}
+                  className={cn(inputErrors.baseUrl ? 'border-red-500 focus-visible:ring-red-500' : '')}
+                />
+                 {inputErrors.baseUrl && (
+                  <p className="text-xs text-red-500 mt-1">{inputErrors.baseUrl}</p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center">
+                  <Label htmlFor="freshrss-username">Username</Label>
+                  <SettingsTooltip content="Your FreshRSS username for API access." />
+                </div>
+                <Input
+                  id="freshrss-username"
+                  value={dialogTempSettings?.username ?? ''}
+                  onChange={(e) => handleDialogInputChange('username', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center">
+                  <Label htmlFor="freshrss-api-password">API Password</Label>
+                  <SettingsTooltip content="Your FreshRSS API password (created in FreshRSS settings)." />
+                </div>
+                <Input
+                  id="freshrss-api-password"
+                  type="password" // Use password type for masking
+                  value={dialogTempSettings?.api_password ?? ''}
+                  onChange={(e) => handleDialogInputChange('api_password', e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Note: API Password is stored locally in browser settings.
+                </p>
+              </div>
+            </div>
+
+            <Separator className="my-4" />
+
+            {/* --- Common Settings --- */}
+            <div className="space-y-4">
+              {/* === Results Per Page === */}
+              <div className="space-y-1">
+                <div className="flex items-center">
+                  <Label htmlFor={`${sourceType}-results-per-page`}>Results Per Page</Label>
+                  <SettingsTooltip content="How many results to show per page for this source." />
+                </div>
+                <Input
+                  id={`${sourceType}-results-per-page`}
+                  type="text"
+                  inputMode="numeric"
+                  value={getDialogInputValue('resultsPerPage', 10)}
+                  onChange={(e) => validateNumericInput(
+                    'resultsPerPage', e.target.value, 1, 100, 'Must be between 1 and 100.'
+                  )}
+                  className={cn(inputErrors.resultsPerPage ? 'border-red-500 focus-visible:ring-red-500' : '')}
+                  placeholder="10"
+                />
+                {inputErrors.resultsPerPage && (
+                  <p className="text-xs text-red-500 mt-1">{inputErrors.resultsPerPage}</p>
+                )}
+              </div>
+
+              {/* === Open Links in New Tab === */}
+              <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm mt-4">
+                <div className="space-y-0.5">
+                   <Label>Open Links in New Tab</Label>
+                   <div className="text-sm text-muted-foreground">Control link behavior for FreshRSS results.</div>
+                </div>
+                <Switch
+                   checked={dialogTempSettings.openNewTab !== false} // Default true
+                   onCheckedChange={(checked) => handleDialogInputChange('openNewTab', checked)}
+                />
+              </div>
+            </div>
+          </>
+        );
+      }
       default: {
         // Fallback for unknown source types
         return (
@@ -1684,7 +1831,7 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
             {/* Button to show the form */} 
             {!isAddingSource && (
               <Button 
-                variant="outline" 
+                variant="themedPrimary" // Changed to themedPrimary
                 className="w-full mt-4"
                 onClick={() => setIsAddingSource(true)}
               >
@@ -1701,12 +1848,13 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
                   <div className="space-y-1">
                     <div className="flex items-center">
                       <Label htmlFor="source-id" className="text-xs">ID</Label>
+                      {/* Added ID Tooltip */}
                       <SettingsTooltip 
-                        content={ // Use JSX fragment for line breaks
+                        content={
                           <>
-                            Unique internal identifier<br />
-                            (e.g., 'my_files').<br />
-                            No spaces.
+                            A unique internal identifier for this specific source instance <br />
+                            (e.g., 'work-obsidian', 'my-rss').<br /> 
+                            Used for storing configuration.
                           </>
                         }
                       />
@@ -1757,7 +1905,15 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
                   <div className="space-y-1">
                     <div className="flex items-center">
                       <Label htmlFor="source-type" className="text-xs">Type</Label>
-                      <SettingsTooltip content="Determines the configuration options available." />
+                      {/* Added Type Tooltip */}
+                      <SettingsTooltip 
+                        content={ 
+                           <>
+                             Determines the kind of source (e.g., Obsidian, FreshRSS) <br />
+                             and the configuration options available for it.
+                           </>
+                         }
+                      />
                     </div>
                     <Select value={newSourceType} onValueChange={setNewSourceType}>
                       <SelectTrigger id="source-type">
@@ -1770,6 +1926,7 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
                         <SelectItem value="youtube">YouTube</SelectItem>
                         <SelectItem value="music">Music</SelectItem>
                         <SelectItem value="photos">Photos</SelectItem>
+                        <SelectItem value="freshrss">FreshRSS</SelectItem> {/* Added FreshRSS option */}
                       </SelectContent>
                     </Select>
                   </div>
@@ -1817,7 +1974,7 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
           </div>
 
           {/* --- Single Open New Tab Control (Applies to selected source) --- */}
-          {selectedSource && selectedSource !== 'ai' && ( // Optionally hide for AI if truly not applicable
+          {selectedSource && selectedSource !== 'ai' && (
             <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm mt-4">
               <div className="space-y-0.5">
                 <Label>Open Links in New Tab</Label>
@@ -1826,14 +1983,20 @@ export function PersonalSourcesSettings({ settings, updateSetting }: PersonalSou
                 </div>
               </div>
               <Switch
-                // Bind to the temporary setting for the selected source
-                checked={dialogTempSettings.openNewTab !== false} // Default true based on schema
+                checked={dialogTempSettings.openNewTab !== false} 
                 onCheckedChange={(checked) => handleDialogInputChange('openNewTab', checked)}
               />
             </div>
           )}
-          {/* --- End Single Control --- */}
 
+          <DialogFooter className="mt-6">
+            <Button variant="outline" onClick={handleCancelChanges}>
+              Cancel
+            </Button>
+            <Button variant="themedPrimary" onClick={handleApplyChanges}>
+              Apply Changes
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

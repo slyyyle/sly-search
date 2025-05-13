@@ -1,67 +1,77 @@
 "use client"
 
-import type React from 'react';
+import React from 'react';
+import Image from 'next/image'; // Use Next.js Image for optimization
 import { YouTubeResultItem } from '@/types/search';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import Link from 'next/link'; // Use NextLink for internal routing if needed, but these are external
+import { PlayCircle } from 'lucide-react'; // Icon overlay for thumbnail
+import { cn } from '@/lib/utils';
 import { useSettings } from "@/lib/use-settings";
 
 interface YoutubeCardItemProps {
   result: YouTubeResultItem;
-  openInNewTab?: boolean;
+  // openInNewTab is handled by the parent link wrapping the card usually
 }
 
-const YoutubeCardItem: React.FC<YoutubeCardItemProps> = ({ result, openInNewTab = true }) => {
+const YoutubeCardItem: React.FC<YoutubeCardItemProps> = ({ result }) => {
+  const displayTitle = result.title || "YouTube Video";
+  const displayChannel = result.channel_name || "Unknown Channel";
+  // Use thumbnail_url if available, otherwise maybe a placeholder?
+  const thumbnailUrl = result.thumbnail_url;
+
   // Get Invidious instance from settings
   const { settings } = useSettings();
   const invidiousInstance = settings?.personalSources?.youtube?.invidiousInstance || "yewtu.be";
   
-  const target = openInNewTab ? '_blank' : '_self';
-  const rel = openInNewTab ? 'noopener noreferrer' : '';
-  const embedUrl = `https://${invidiousInstance}/embed/${result.vid}`;
-
   return (
-    <Card className="flex flex-col h-full overflow-hidden"> {/* Ensure card flexes and handles overflow */}
-      {result.thumbnail_url && (
-        <div className="aspect-video overflow-hidden"> {/* Maintain aspect ratio */}
-          <img
-            src={result.thumbnail_url}
-            alt={`Thumbnail for ${result.title}`}
-            className="object-cover w-full h-full" // Cover the area
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-          />
-        </div>
+    <a
+      href={result.url} // Link the whole card to the YouTube video URL
+      target="_blank" // Always open YouTube links in new tab
+      rel="noopener noreferrer"
+      className={cn(
+        "youtube-card-item group block overflow-hidden rounded-lg border border-border/40 bg-card text-card-foreground shadow-sm",
+        "transition-all duration-200 ease-in-out hover:shadow-md hover:border-border/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       )}
-      <CardHeader className="p-4">
-        <CardTitle className="text-base font-semibold leading-tight"> {/* Adjusted title size */}
-          {/* Make the main title clickable with original URL */}
-          <a href={result.url} target={target} rel={rel} className="hover:underline">
-             {result.title}
-          </a>
-        </CardTitle>
-        {result.channel_name && (
-          <p className="text-xs text-muted-foreground pt-1">{result.channel_name}</p>
-        )}
-      </CardHeader>
-      {/* Removed CardContent as description isn't typically shown on YT cards */}
-      <CardFooter className="p-4 pt-0 mt-auto"> {/* Push footer to bottom */}
-        {result.vid && (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-blue-400">
-            <span className="text-gray-400 font-medium">Watch:</span>
-            <a href={`https://${invidiousInstance}/watch?v=${result.vid}`} target="_blank" rel="noopener noreferrer" className="hover:underline">Invidious</a>
-            <a 
-              href={embedUrl}
-              rel="noopener noreferrer" 
-              className="hover:underline text-blue-400"
-            >
-              (Fullscreen)
-            </a>
-            <a href={`https://cinemaphile.com/watch?v=${result.vid}`} target="_blank" rel="noopener noreferrer" className="hover:underline">HookTube</a>
-            <a href={`https://www.youtube.com/watch?v=${result.vid}`} target="_blank" rel="noopener noreferrer" className="hover:underline">YouTube</a>
+    >
+      {/* Thumbnail Section */}
+      <div className="relative aspect-video bg-muted overflow-hidden">
+        {thumbnailUrl ? (
+          <Image
+            src={thumbnailUrl}
+            alt={`Thumbnail for ${displayTitle}`}
+            fill // Use fill to cover the aspect-video container
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw" // Basic responsive sizes
+            className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
+            onError={(e) => {
+              // Optional: Handle broken images - hide element or show placeholder
+              e.currentTarget.style.display = 'none'; 
+              // Could also replace with a placeholder background in the parent div
+            }}
+          />
+        ) : (
+          // Placeholder if no thumbnail
+          <div className="absolute inset-0 flex items-center justify-center bg-secondary">
+            <PlayCircle className="h-12 w-12 text-muted-foreground/50" />
           </div>
         )}
-      </CardFooter>
-    </Card>
+        {/* Play icon overlay - subtle */}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <PlayCircle className="h-12 w-12 text-white/80" />
+        </div>
+      </div>
+
+      {/* Info Section */}
+      <div className="p-3">
+        <h3
+          className="text-sm font-medium line-clamp-2 mb-1 leading-tight group-hover:text-primary transition-colors"
+          title={displayTitle}
+        >
+          {displayTitle}
+        </h3>
+        <p className="text-xs text-muted-foreground line-clamp-1" title={displayChannel}>
+          {displayChannel}
+        </p>
+      </div>
+    </a>
   );
 };
 

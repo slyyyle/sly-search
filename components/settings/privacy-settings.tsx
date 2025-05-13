@@ -120,7 +120,7 @@ export function PrivacySettings() {
             />
           </div>
 
-          <div className="space-y-1">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Label htmlFor="proxy-url">Proxy URL</Label>
               <SettingsTooltip content="The URL of your proxy service." />
@@ -131,10 +131,11 @@ export function PrivacySettings() {
               disabled={!currentSettings.enableResultProxy}
               value={currentSettings.resultProxyUrl || ""}
               onChange={(e) => updateSetting("privacy", "resultProxyUrl", e.target.value)}
+              className={`w-[600px] text-right${!currentSettings.enableResultProxy ? ' cursor-not-allowed opacity-70' : ''}`}
             />
           </div>
 
-          <div className="space-y-1">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Label htmlFor="proxy-api-key">API Key</Label>
               <SettingsTooltip content="Optional API key for your proxy service." />
@@ -144,6 +145,7 @@ export function PrivacySettings() {
               disabled={!currentSettings.enableResultProxy}
               value={currentSettings.resultProxyKey || ""}
               onChange={(e) => updateSetting("privacy", "resultProxyKey", e.target.value)}
+              className={`w-[600px] text-right${!currentSettings.enableResultProxy ? ' cursor-not-allowed opacity-70' : ''}`}
             />
           </div>
         </CardContent>

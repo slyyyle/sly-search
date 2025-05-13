@@ -98,7 +98,7 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
               value={currentSettings.instanceUrl || "http://127.0.0.1:8000"}
               onChange={(e) => updateSetting("general", "instanceUrl", e.target.value)}
               disabled={true}
-              className="flex-grow cursor-not-allowed opacity-70 text-right"
+              className="max-w-sm cursor-not-allowed opacity-70"
             />
           </div>
 
@@ -125,7 +125,6 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
                 <Label htmlFor="autocomplete">Autocomplete</Label>
                 <SettingsTooltip content="Enable search suggestions as you type. Available backends include: 360search, baidu, brave, dbpedia, duckduckgo, google, yandex, and more." />
               </div>
-              <div className="text-sm text-muted-foreground">Get wave tips while paddling out</div>
             </div>
             {/* INFERRED: !== false: Feature should be ON by default if undefined (opt-out) */}
             <Switch
@@ -262,10 +261,6 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
             />
           </div>
 
-          {/* Web Search Settings from Personal Sources */}
-          <Separator className="my-4" />
-          <h3 className="text-lg font-medium">Web Search Settings</h3>
-
           {/* Results Per Page */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -293,12 +288,11 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
           </div>
 
           {/* Open Links in New Tab Switch */}
-          <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
-            <div className="space-y-0.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
               <Label>Open Links in New Tab</Label>
-              <div className="text-sm text-muted-foreground">Control link behavior for web search.</div>
+              <SettingsTooltip content="Control link behavior for web search." />
             </div>
-            {/* INFERRED: !== false: Feature should be ON by default if undefined (opt-out) */}
             <Switch
               checked={webSettings?.openNewTab !== false}
               onCheckedChange={(checked) => updateWebSettings('openNewTab', checked)}
@@ -306,12 +300,10 @@ export function GeneralSettings({ settings, updateSetting }: GeneralSettingsProp
           </div>
           
           {/* Search on Category Change Switch */}
-          <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
-            <div className="space-y-0.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
               <Label>Search When Filters Change</Label>
-              <div className="text-sm text-muted-foreground">
-                Automatically trigger a new search when category filters are toggled.
-              </div>
+              <SettingsTooltip content="Automatically trigger a new search when category filters are toggled." />
             </div>
             <Switch
               checked={webSettings?.searchOnCategory === true}

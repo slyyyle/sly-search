@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
-import { Database, Globe, Zap, Book, FileText, Brain, Bot, Music, Youtube, Library, Image } from "lucide-react"
+import React, { useState } from "react"
+import { Database, Globe, Zap, Book, FileText, Brain, Bot, Music, Youtube, Library, Image, Rss } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { useSettings } from "@/lib/use-settings"
@@ -20,43 +20,16 @@ const TheLocalLagoon: React.FC<TheLocalLagoonProps> = ({
   startExpanded = false,
 }) => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false)
-  const { settings } = useSettings()
+  const { settings, loading, isInitialLoadComplete } = useSettings()
 
-  const surfSources = settings.personalSources?.sources || [
-    { id: "web", label: "Web", icon: "Zap", color: "#176BEF", gradient: "themed-gradient-transparent" },
-    {
-      id: "obsidian",
-      label: "Obsidian",
-      icon: "Brain",
-      color: "#7E6AD7",
-      gradient: "themed-gradient-transparent",
-    },
-    { id: "localFiles", label: "Files", icon: "FileText", color: "#F7B529", gradient: "themed-gradient-transparent" },
-    { id: "ai", label: "AI", icon: "Bot", color: "#10B981", gradient: "themed-gradient-transparent" },
-    {
-      id: "youtube",
-      label: "YouTube",
-      icon: "Youtube",
-      color: "#FF0000",
-      gradient: "themed-gradient-transparent",
-    },
-    {
-      id: "music",
-      label: "Music",
-      icon: "Music",
-      color: "#FF7700",
-      gradient: "themed-gradient-transparent",
-    },
-    {
-      id: "photos",
-      label: "Photos",
-      icon: "Image",
-      color: "#3498DB",
-      gradient: "themed-gradient-transparent",
-    },
-  ]
+  if (!isInitialLoadComplete) {
+    return null;
+  }
 
-  const getIconComponent = (iconName: string) => {
+  const surfSources = settings.personalSources?.sources || [];
+
+  const getIconComponent = (iconName: string | undefined): React.ElementType => {
+    if (!iconName) return Database;
     const lowerIconName = iconName.toLowerCase();
     switch (lowerIconName) {
       case "zap":
@@ -81,6 +54,8 @@ const TheLocalLagoon: React.FC<TheLocalLagoonProps> = ({
         return Image
       case "library":
         return Library
+      case "rss":
+        return Rss
       default:
         return Database
     }
@@ -92,6 +67,10 @@ const TheLocalLagoon: React.FC<TheLocalLagoonProps> = ({
     onChange(sourceId);
     setIsPopoverOpen(false);
   };
+
+  if (surfSources.length === 0 && !startExpanded) {
+    return null;
+  }
 
   if (startExpanded) {
     return (
@@ -135,10 +114,14 @@ const TheLocalLagoon: React.FC<TheLocalLagoonProps> = ({
     )
   }
 
-  if (!selectedSource) return null;
+  if (!selectedSource && surfSources.length > 0) {
+    if (!startExpanded) return null;
+  }
 
-  const TriggerIcon = getIconComponent(selectedSource.icon);
-  const triggerGradient = selectedSource.gradient || "themed-gradient-transparent";
+  if (!selectedSource && !startExpanded) return null;
+
+  const TriggerIcon = getIconComponent(selectedSource?.icon);
+  const triggerGradient = selectedSource?.gradient || "themed-gradient-transparent";
 
   return (
     <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
@@ -158,7 +141,7 @@ const TheLocalLagoon: React.FC<TheLocalLagoonProps> = ({
             style={{ color: "white" }}
           />
           <span className={cn("ml-1.5 text-white font-medium")}>
-            {selectedSource.label}
+            {selectedSource?.label}
           </span>
         </button>
       </PopoverTrigger>

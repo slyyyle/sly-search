@@ -4,6 +4,10 @@ import type React from "react";
 import { useState, useEffect, createContext, useContext, useCallback } from "react";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
+import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
+import { immer } from 'zustand/middleware/immer'
+import { toast } from "sonner"
 
 // Keep the imports from the schema file
 import {
@@ -19,7 +23,8 @@ import {
   type PhotosSourceConfig,
   type SourceListItem,
   type Engine,
-  type YouTubeSourceConfig
+  type YouTubeSourceConfig,
+  type FreshRSSSourceConfig
 } from "./settings-schema";
 
 // Ensure these types are exported
@@ -35,7 +40,8 @@ export type {
   YouTubeSourceConfig,
   SourceListItem,
   Engine,
-  SettingsContextType
+  SettingsContextType,
+  FreshRSSSourceConfig
 };
 export { appSettingsSchema }; // Export value separately
 // No need to re-export schema types directly if only used internally or via AppSettings
@@ -96,78 +102,19 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 // --- Keep Default Settings Definition Here ---
 const defaultSettings: AppSettings = {
   general: {
-    instanceName: "SlySearch",
-    resultsPerPage: "10",
-    safeSearch: "0",
-    defaultLanguage: "auto",
-    ragEnabled: false,
-    autocomplete: true,
-    autocompleteMin: "4",
-    faviconResolver: "off",
-    banTime: "5",
-    maxBanTime: "120",
-    // Moved from advanced
-    instanceUrl: "http://127.0.0.1:8000",
-    requestTimeout: "5", 
-    maxRequestTimeout: "10",
-    debugMode: false,
-  },
-  engines: {
-    // User-saved loadouts start empty
-    loadouts: [],
-    // Default to starter loadout state
-    activeLoadoutId: "starter",
-  },
-  privacy: {
-    proxyImages: true,
-    removeTrackers: true,
-    blockCookies: false,
-    queryInTitle: false,
-    method: "POST",
-    urlAnonymizer: false,
-    // Moved from advanced
-    enableResultProxy: false,
-    resultProxyUrl: "",
-    resultProxyKey: "",
+    showGrid: true,
+    showSuggestions: true,
+    searchDebounce: 150,
+    maxResults: 10,
+    safeSearch: "moderate",
+    searchLanguage: "en-US",
   },
   appearance: {
-    resultsLayout: "list",
-    theme: "google-original",
-    font: "hack-local",
-    centerAlignment: false,
-    defaultLocale: "auto",
-    hotkeys: "default",
-    urlFormat: "pretty",
-    infiniteScroll: true,
-    // Quick Links settings
-    enableQuickLinks: true,
-    // Add default quick links - without hardcoded favicon URLs
-    quickLinks: [
-      {
-        id: "google",
-        label: "Google",
-        url: "https://google.com",
-        category: "General"
-      },
-      {
-        id: "github",
-        label: "GitHub",
-        url: "https://github.com",
-        category: "General"
-      },
-      {
-        id: "youtube",
-        label: "YouTube",
-        url: "https://youtube.com",
-        category: "General"
-      },
-      {
-        id: "wikipedia",
-        label: "Wikipedia",
-        url: "https://wikipedia.org",
-        category: "General"
-      }
-    ]
+    theme: "default",
+    fontFamily: "sans-serif",
+    layout: "grid",
+    showResultIcons: true,
+    openLinksInNewTab: true,
   },
   advanced: {
     formats: ["json", "html"],
@@ -178,7 +125,6 @@ const defaultSettings: AppSettings = {
     redisUrl: undefined,
     limiter: false,
     publicInstance: false,
-    // Legacy fields kept for backward compatibility
     instanceUrl: "http://127.0.0.1:8000",
     requestTimeout: "5",
     maxRequestTimeout: "10",
@@ -189,65 +135,87 @@ const defaultSettings: AppSettings = {
   },
   personalSources: {
     sources: [
-        { id: "web", label: "Web", icon: "Zap", color: "#176BEF", gradient: "from-[#176BEF]/70 to-[#FF3E30]/70" },
-        { id: "obsidian", label: "Obsidian", icon: "Brain", color: "#7E6AD7", gradient: "from-[#7E6AD7]/70 to-[#9C87E0]/70" },
-        { id: "localFiles", label: "Files", icon: "FileText", color: "#F7B529", gradient: "from-[#FF3E30]/70 to-[#F7B529]/70" },
-        { id: "ai", label: "AI", icon: "Bot", color: "#10B981", gradient: "from-[#10B981]/70 to-[#059669]/70" },
-        { id: "youtube", label: "YouTube", icon: "Youtube", color: "#FF0000", gradient: "from-[#FF0000]/70 to-[#CC0000]/70" },
-        { id: "music", label: "Music", icon: "Library", color: "#FF7700", gradient: "from-[#FF7700]/70 to-[#FF3300]/70" },
-        { id: "photos", label: "Photos", icon: "Image", color: "#3498DB", gradient: "from-[#3498DB]/70 to-[#2980B9]/70" },
+        { id: "web", label: "Web", icon: "Zap", color: "#176BEF", gradient: "themed-gradient-transparent" },
+        { id: "obsidian", label: "Obsidian", icon: "Brain", color: "#7E6AD7", gradient: "themed-gradient-transparent" },
+        { id: "localFiles", label: "Files", icon: "FileText", color: "#F7B529", gradient: "themed-gradient-transparent" },
+        { id: "ai", label: "AI", icon: "Bot", color: "#10B981", gradient: "themed-gradient-transparent" },
+        { id: "youtube", label: "YouTube", icon: "Youtube", color: "#FF0000", gradient: "themed-gradient-transparent" },
+        { id: "music", label: "Music", icon: "Music", color: "#FF7700", gradient: "themed-gradient-transparent" },
+        { id: "photos", label: "Photos", icon: "Image", color: "#3498DB", gradient: "themed-gradient-transparent" },
+        { id: "freshrss", label: "FreshRSS", icon: "Rss", color: "#FFA500", gradient: "themed-gradient-transparent" },
     ],
     loadouts: [],
     obsidian: { 
       useLocalPlugin: false, 
       path: undefined, 
       vaultName: undefined, 
-      apiPort: undefined, 
+      apiPort: 7777,
       pluginApiKey: undefined, 
+      resultsPerPage: 10,
       defaultObsidianView: 'list', 
       resultsColumns: 4,
+      excludedFolders: [],
       openNewTab: true
     },
     localFiles: { 
-      fileTypes: "md,txt,pdf", 
+      fileTypes: ["md", "txt", "pdf"],
       useIndexer: false, 
       path: undefined,
+      resultsPerPage: 10,
       openNewTab: true
     },
     ai: { 
+      provider: 'openai',
       model: "gpt-4o", 
       temperature: 0.7, 
       maxTokens: 1000, 
       apiKey: undefined, 
-      baseUrl: "https://api.openai.com/v1",
-      openNewTab: true
-    },
-    music: { 
-      path: undefined,
-      openNewTab: true
-    },
-    photos: { 
-      path: undefined, 
-      defaultPhotosView: 'card',
+      baseUrl: undefined,
+      resultsPerPage: 1,
       openNewTab: true
     },
     youtube: { 
       path: undefined, 
       download_base_path: undefined, 
-      defaultYouTubeView: 'card',
+      resultsPerPage: 10,
+      defaultYouTubeView: 'card', 
+      resultsColumns: 4, 
       openNewTab: true,
-      invidiousInstance: "yewtu.be"
+      invidiousInstance: "yewtu.be",
+    },
+    music: { 
+      path: undefined, 
+      resultsPerPage: 10,
+      openNewTab: true 
+    },
+    photos: { 
+      path: undefined, 
+      resultsPerPage: 10,
+      defaultPhotosView: 'card',
+      resultsColumns: 4,
+      openNewTab: true 
     },
     web: { 
-      resultsPerPage: 10, 
-      defaultWebView: 'list', 
+      resultsPerPage: 10,
+      defaultWebView: 'list',
       resultsColumns: 4,
       openNewTab: true,
-      searchOnCategory: true
+      searchOnCategory: true,
+    },
+    freshrss: {
+      base_url: undefined,
+      username: undefined,
+      api_password: undefined,
+      resultsPerPage: 10,
+      openNewTab: true,
     },
   },
   waveRacer: {
-    // We'll add specific settings here later
+    // Default wave racer settings can go here
+  },
+  engines: {
+    loadouts: [],
+    activeLoadoutId: null,
   },
 };
 
@@ -278,21 +246,27 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         });
 
         if (!response.ok) {
-          throw new Error(`API fetch failed with status: ${response.status}`); // Trigger catch block for fallback
+          throw new Error(`API fetch failed with status: ${response.status}`); 
         }
 
         const data = await response.json();
+        // --- LOGGING 1: Raw API Data ---
+        console.log("[DEBUG] Raw data received from /api/settings:", JSON.stringify(data, null, 2)); 
+        // --- END LOGGING 1 ---
+        
         const validationResult = appSettingsSchema.safeParse(data);
 
         if (validationResult.success) {
           loadedSettings = validationResult.data;
           loadedSource = "API";
           console.log("Successfully loaded and validated settings from API:", loadedSettings);
-          console.log("[THEME DEBUG] Loaded appearance settings from API:", loadedSettings.appearance);
         } else {
-          console.error("API data validation failed:", validationResult.error.errors);
+          // --- LOGGING 2: Zod Validation Errors ---
+          console.error("[DEBUG] Zod validation failed. Raw Data was:", JSON.stringify(data, null, 2));
+          console.error("[DEBUG] Zod validation errors:", JSON.stringify(validationResult.error.errors, null, 2));
+          // --- END LOGGING 2 ---
           setError("Loaded settings from API are invalid. Using fallback.");
-          throw new Error("API data validation failed"); // Trigger catch block for fallback
+          throw new Error("API data validation failed"); 
         }
 
       } catch (err: any) {
@@ -331,18 +305,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         }
       };
       
-      // Validate or default activeEngineLoadoutId (finalSettings.engines should now be guaranteed)
-      const currentActiveId = finalSettings.engines!.activeLoadoutId;
-      const savedLoadouts = finalSettings.engines!.loadouts;
-      const isValidSavedId = savedLoadouts.some(l => l.id === currentActiveId);
-      // Allow locked loadouts 'starter' and 'sl-ai' even if not present in savedLoadouts
-      const lockedIds = ['starter', 'sl-ai'];
-      if (!isValidSavedId && !lockedIds.includes(currentActiveId || '')) {
-        console.warn(`Invalid active engine loadout ID (${currentActiveId}) found during load. Resetting to 'starter'.`);
-        finalSettings.engines!.activeLoadoutId = 'starter';
-      } else {
-        console.log(`Initial active engine loadout ID set to: ${currentActiveId ?? 'starter'}`);
-      }
+      // --- LOGGING 3: Final Settings Object Before Set ---
+      console.log("[DEBUG] Final settings object before setting state:", JSON.stringify(finalSettings, null, 2));
+      // --- END LOGGING 3 ---
 
       setSettings(finalSettings);
 
@@ -415,9 +380,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   // --- Update a specific setting in local state ---
   const updateSetting = useCallback((section: keyof AppSettings | keyof AppSettings["personalSources"] | "engines", key: string, value: any) => {
-    // Complex handling ensures deep property updates without mutation
-    // Safely handles potentially undefined intermediate objects
-    // Provides single interface for updating any setting regardless of nesting level
+    // --- LOGGING 4: Inside updateSetting ---
+    console.log(`[DEBUG] updateSetting called with section: ${String(section)}, key: ${key}, value:`, value);
+    // --- END LOGGING 4 ---
     setSettings((prev) => {
       const newSettings = JSON.parse(JSON.stringify(prev));
 

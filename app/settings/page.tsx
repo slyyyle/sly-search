@@ -136,7 +136,7 @@ export default function SettingsPage() {
 
             <Button
               onClick={handleSaveSettings}
-              className="themed-gradient-border hover:bg-black"
+              variant="themedPrimary"
               disabled={!hasChanges || loading}
               size="sm"
             >
